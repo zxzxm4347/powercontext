@@ -160,6 +160,10 @@ from powercontext.builtin.records import (
 )
 from powercontext.builtin.review.generation import GeneratedCandidateResult, ReviewedGenerationService
 from powercontext.builtin.review.service import ReviewService
+from powercontext.builtin.runtime.source_lifecycle import (
+    ScopedSourceLifecycleApplication,
+    SourceLifecycleApplication,
+)
 from powercontext.builtin.runtime._scope_cache import (
     DEFAULT_SCOPE_CACHE_SIZE,
     ScopeCache,
@@ -488,6 +492,7 @@ class ScopedSourceApplication:
                             span.set_attributes({_MEMORY_CAPTURE_SOURCE_COUNT: 1})
             except BaseValueConflictError as error:
                 raise SourceConflictError("identity", error.identity) from None
+            self._runtime._wake_artifact_processing_supervisor()
             return SourceReceipt(
                 source_ref=SourceRef(source_type=record.source_type, source_id=record.source_id),
                 sequence=record.position,
@@ -504,6 +509,7 @@ class ScopedSourceApplication:
                 )
                 if span is not None:
                     span.set_attributes({_MEMORY_CAPTURE_SOURCE_COUNT: 1})
+            self._runtime._wake_artifact_processing_supervisor()
             return SourceReceipt(source_ref=context.sources.catalog.as_ref(source), sequence=sequence)
 
 
@@ -531,11 +537,13 @@ class ScopedRecordApplication:
         /,
     ) -> SourceRecord:
         async with self._runtime._scope_operation(self.scope_id), self._runtime._locked(self.scope_id):
-            return await self._runtime._records().create_source(
+            record = await self._runtime._records().create_source(
                 self.scope_id,
                 source_type,
                 content,
             )
+        self._runtime._wake_artifact_processing_supervisor()
+        return record
 
     async def get_source(self, source_type: str, source_id: str, /) -> SourceRecord:
         async with self._runtime._scope_operation(self.scope_id):
@@ -563,7 +571,9 @@ class ScopedRecordApplication:
         /,
     ) -> ArtifactCreated:
         async with self._runtime._scope_operation(self.scope_id), self._runtime._locked(self.scope_id):
-            return await self._runtime._records().create_artifact(self.scope_id, family, write)
+            created = await self._runtime._records().create_artifact(self.scope_id, family, write)
+        self._runtime._wake_artifact_processing_supervisor()
+        return created
 
     async def get_artifact(self, family: str, artifact_id: str, /) -> ArtifactRecord:
         async with self._runtime._scope_operation(self.scope_id):
@@ -646,13 +656,15 @@ class ScopedRecordApplication:
         /,
     ) -> ArtifactRecord:
         async with self._runtime._scope_operation(self.scope_id), self._runtime._locked(self.scope_id):
-            return await self._runtime._records().replace_artifact(
+            replaced = await self._runtime._records().replace_artifact(
                 self.scope_id,
                 family,
                 artifact_id,
                 expected_etag,
                 write,
             )
+        self._runtime._wake_artifact_processing_supervisor()
+        return replaced
 
 
 class RecordApplication:
@@ -723,7 +735,9 @@ class RemoteIngestionApplication:
 
     async def submit(self, request: SubmitSourceObservation, /) -> SourceReceipt:
         async with self._runtime._scope_operation(request.scope_id):
-            return await self._require_service().submit_source_observation(request)
+            receipt = await self._require_service().submit_source_observation(request)
+        self._runtime._wake_artifact_processing_supervisor()
+        return receipt
 
     async def commit(self, request: CommitConnectorCheckpoint, /) -> ConnectorCheckpointState:
         async with self._runtime._scope_operation(request.binding.scope_id):
@@ -847,6 +861,26 @@ class ScopedContextApplication:
                 await authorize_scopes((self.scope_id, *scope.context_references))
             return await self._prepare(request, scope)
 
+    async def prepare_incremental(
+        self,
+        request: PrepareContextRequest,
+        /,
+        base_pack: Any = None,
+        *,
+        authorize_scopes: Callable[[tuple[str, ...]], Awaitable[None]] | None = None,
+    ) -> Any:
+        from powercontext.builtin.runtime.context_pack import ContextPack, ContextPackDelta, ContextPackError
+
+        if base_pack is not None:
+            if not isinstance(base_pack, ContextPack):
+                raise ContextPackError("base_pack must be a ContextPack or None")
+            ContextPack.from_bytes(base_pack.to_bytes())
+        prepared = await self.prepare(request, authorize_scopes=authorize_scopes)
+        target_pack = ContextPack.from_content(prepared.content)
+        if base_pack is None:
+            return target_pack
+        return ContextPackDelta.between(base_pack, target_pack)
+
     async def _prepare(self, request: PrepareContextRequest, scope: ScopeDescriptor, /) -> PreparedContext:
         build, effort = await self._prepare_build(request, scope)
         if effort is not None and self._runtime._recall_effort_sink is not None:
@@ -909,7 +943,9 @@ class ScopedContextApplication:
             builder.entry_limit = self._runtime.context_assembly_max_entries
         scope_ids = [self.scope_id, *scope.context_references]
         families: set[str] = (
-            {section.family for section in request.assembly.sections}
+            {MEMORY_FAMILY}
+            if request.evidence_selection
+            else {section.family for section in request.assembly.sections}
             if request.assembly is not None
             else {MEMORY_FAMILY, EXPERIENCE_FAMILY, TOPIC_MEMORY_FAMILY}
         )
@@ -2645,6 +2681,11 @@ class ScopedTopicMemoryApplication:
             self.scope_id,
             embedding_purpose=ModelUsagePurpose.TOPIC_MEMORY_RECALL,
         ):
+            inactive_ids = await self._runtime.lifecycle.for_scope(self.scope_id).inactive_topic_artifact_ids()
+            search_limit = min(MAX_TOPIC_MEMORY_SEARCH_LIMIT, request.limit + len(inactive_ids))
+            effective_request = (
+                request if search_limit == request.limit else request.model_copy(update={"limit": search_limit})
+            )
             embedding = self._runtime._topic_memory_embedding_model if allow_embedding else None
             browse = self._runtime._topic_memory_browse
             if embedding is not None and browse is not None and not await browse(self.scope_id, limit=1, after=None):
@@ -2653,20 +2694,25 @@ class ScopedTopicMemoryApplication:
                 result = await search(
                     self.scope_id,
                     query,
-                    limit=request.limit,
+                    limit=effective_request.limit,
                     mode="fts",
                     **_admission_keyword(admission),
                 )
                 result = result.model_copy(update={"embedding_calls": 0})
             else:
                 result, used_fallback = await self._search_with_embedding(
-                    request,
+                    effective_request,
                     embedding,
                     search,
                     admission,
                     query_embedding,
                     embedding_timeout_seconds,
                 )
+            if inactive_ids:
+                filtered_hits = tuple(
+                    hit for hit in result.hits if hit.artifact_ref.artifact_id not in inactive_ids
+                )[: request.limit]
+                result = result.model_copy(update={"hits": filtered_hits})
         observer = self._runtime._topic_memory_search_observer
         if observer is not None:
             try:
@@ -3110,6 +3156,7 @@ class BuiltinRuntime:
         self.work = WorkApplication(self)
         self.memory = MemoryApplication(self)
         self.topic_memory = TopicMemoryApplication(self)
+        self.lifecycle = SourceLifecycleApplication(self)
         self.records = RecordApplication(self)
         self.prompts = PromptApplication(self)
         self.review = ReviewApplication(self)
@@ -3122,6 +3169,23 @@ class BuiltinRuntime:
         self.experience_processor = (
             None if scope_ids is None or experience_incubator is None else ScheduledExperienceProcessor(self, scope_ids)
         )
+
+    def _wake_artifact_processing_supervisor(self, binding_name: str | None = None) -> None:
+        if self.artifact_processing_supervisor is not None:
+            try:
+                self.artifact_processing_supervisor.wake(binding_name)
+            except Exception as error:
+                log_safely(
+                    logger,
+                    logging.WARNING,
+                    "Artifact processing supervisor wake failed",
+                    exc_info=error,
+                    extra={
+                        "event": "artifact_processing.wake_failed",
+                        "outcome": "ignored",
+                        "unit": "artifact-processing",
+                    },
+                )
 
     async def __aenter__(self) -> BuiltinRuntime:
         return self

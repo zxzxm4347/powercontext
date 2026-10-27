@@ -114,14 +114,26 @@ class ArtifactProcessingIntentRepository:
         return cast(StoredArtifactProcessingIntent, await self.load(connection, scope_id, binding_name))
 
     async def mark_dirty(
-        self, connection: AsyncConnection, scope_id: str, binding_name: str, /
+        self,
+        connection: AsyncConnection,
+        scope_id: str,
+        binding_name: str,
+        /,
+        *,
+        request_if_idle: bool = False,
     ) -> StoredArtifactProcessingIntent:
         await self.ensure(connection, scope_id, binding_name)
+        current = cast(
+            StoredArtifactProcessingIntent, await self.load(connection, scope_id, binding_name, for_update=True)
+        )
+        requested = current.requested_generation
+        if request_if_idle and requested == current.handled_generation:
+            requested += 1
         table = ARTIFACT_PROCESSING_INTENTS_TABLE
         await connection.execute(
             update(table)
             .where(table.c.scope_id == scope_id, table.c.binding_name == binding_name)
-            .values(dirty_generation=table.c.dirty_generation + 1)
+            .values(dirty_generation=current.dirty_generation + 1, requested_generation=requested)
         )
         return cast(
             StoredArtifactProcessingIntent, await self.load(connection, scope_id, binding_name, for_update=True)
@@ -150,6 +162,7 @@ class ArtifactProcessingIntentRepository:
         /,
         *,
         clean_generation: int | None = None,
+        re_request_if_caught_up: bool = False,
     ) -> StoredArtifactProcessingIntent:
         _require_nonnegative("generation", generation)
         current = await self.load(connection, scope_id, binding_name, for_update=True)
@@ -163,11 +176,18 @@ class ArtifactProcessingIntentRepository:
             if clean_generation > current.dirty_generation:
                 raise InvalidRepositoryArgumentError("clean_generation", "cannot acknowledge unseen domain work")
             clean = max(clean, clean_generation)
+        requested = current.requested_generation
+        if re_request_if_caught_up and requested <= generation:
+            requested = generation + 1
         table = ARTIFACT_PROCESSING_INTENTS_TABLE
         await connection.execute(
             update(table)
             .where(table.c.scope_id == scope_id, table.c.binding_name == binding_name)
-            .values(handled_generation=max(current.handled_generation, generation), clean_generation=clean)
+            .values(
+                handled_generation=max(current.handled_generation, generation),
+                clean_generation=clean,
+                requested_generation=requested,
+            )
         )
         return cast(StoredArtifactProcessingIntent, await self.load(connection, scope_id, binding_name))
 

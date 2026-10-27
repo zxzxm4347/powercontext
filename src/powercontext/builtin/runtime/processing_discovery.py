@@ -48,10 +48,18 @@ async def enabled_profile_scopes(connection: AsyncConnection, scope_ids: tuple[s
 class SourceProcessingPendingProvider:
     """Inspect journal metadata, never Source bodies, prompts, or models."""
 
-    def __init__(self, database: AsyncDatabase, binding_name: str, artifact_family: str) -> None:
+    def __init__(
+        self,
+        database: AsyncDatabase,
+        binding_name: str,
+        artifact_family: str,
+        *,
+        source_count_threshold: int | None = None,
+    ) -> None:
         self._database = database
         self._binding = binding_name
         self._family = artifact_family
+        self._threshold = source_count_threshold
 
     async def reconcile(self, after_scope_id: str | None, limit: int, *, fence: ArtifactProcessingFence) -> str | None:
         heads = SOURCE_JOURNAL_HEADS_TABLE
@@ -68,9 +76,20 @@ class SourceProcessingPendingProvider:
             cursors = SourceCursorRepository()
             for scope, high in rows:
                 cursor = await cursors.load(connection, scope, self._binding)
-                if int(high) <= (0 if cursor is None else cursor.cursor.sequence):
+                unconsumed = int(high) - (0 if cursor is None else cursor.cursor.sequence)
+                if unconsumed <= 0:
                     continue
+                request_if_idle = self._threshold is not None and unconsumed >= self._threshold
                 intent = await intents.load(connection, scope, self._binding, for_update=True)
-                if intent is None or intent.dirty_generation == intent.clean_generation:
-                    await intents.mark_dirty(connection, scope, self._binding)
+                if (
+                    intent is None
+                    or intent.dirty_generation == intent.clean_generation
+                    or (request_if_idle and intent.requested_generation == intent.handled_generation)
+                ):
+                    await intents.mark_dirty(
+                        connection,
+                        scope,
+                        self._binding,
+                        request_if_idle=request_if_idle,
+                    )
         return str(rows[-1][0]) if len(rows) == limit else None

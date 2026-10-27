@@ -110,6 +110,12 @@ from powercontext.builtin.runtime.decision_model import (
     StructuredDecisionModel,
 )
 from powercontext.builtin.runtime.errors import InvalidRuntimeRequestError, TopicMemoryProcessingUnavailableError
+from powercontext.builtin.runtime.source_lifecycle import (
+    ScopedSourceLifecycleApplication,
+    SourceLifecycleApplication,
+    SourceLifecycleError,
+    SourceLifecycleEvent,
+)
 from powercontext.builtin.runtime.memory_write_gate import (
     DecisionMemoryWriteGate,
     MemoryWriteAssessment,
@@ -172,6 +178,7 @@ from powercontext.builtin.runtime.models import (
     SubmitSourceObservation,
     TopicMemoryFlushResult,
 )
+from powercontext.builtin.runtime.prepared_context import PreparedEvidenceFragment
 from powercontext.builtin.runtime.protocols import PowerContextProvider, RemoteIngestion
 from powercontext.builtin.runtime.readiness import (
     CachedReadinessProbe,
@@ -318,6 +325,7 @@ __all__ = [
     "PrepareContextRequest",
     "PrepareHandoff",
     "PreparedContext",
+    "PreparedEvidenceFragment",
     "PreparedHandoff",
     "ProposeExperienceRequest",
     "ProposeSkillRequest",
@@ -356,6 +364,7 @@ __all__ = [
     "ScopedReviewApplication",
     "ScopedSkillApplication",
     "ScopedSourceApplication",
+    "ScopedSourceLifecycleApplication",
     "ScopedStatisticsApplication",
     "ScopedTopicMemoryApplication",
     "ScopedWorkApplication",
@@ -366,6 +375,9 @@ __all__ = [
     "SkillGenerationOrigin",
     "SourceApplication",
     "SourceInventoryStatistics",
+    "SourceLifecycleApplication",
+    "SourceLifecycleError",
+    "SourceLifecycleEvent",
     "SourceReceipt",
     "SpawnArtifactProcessingWorkerLauncher",
     "Statistics",

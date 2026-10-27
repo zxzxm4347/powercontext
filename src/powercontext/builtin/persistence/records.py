@@ -334,7 +334,15 @@ class RelationalRecordService:
         )
         try:
             async with self._database.transaction() as connection:
-                stored = await self._sources.add(connection, scope_id, source)
+                stored, created = await self._sources.add_with_status(connection, scope_id, source)
+                if created and self._processing_pending is not None:
+                    for binding_name in self._source_processing_bindings:
+                        await self._processing_pending.raise_source(
+                            connection,
+                            scope_id,
+                            binding_name,
+                            stored.journal_position,
+                        )
                 artifact = await writer.create(connection, scope_id, artifact_id, prepared, stored.ref)
         except (StoredPayloadConflictError, RevisionConflictError) as error:
             raise BaseValueConflictError("artifact", (scope_id, family, artifact_id)) from error
@@ -610,7 +618,15 @@ class RelationalRecordService:
                 ),
             )
             try:
-                stored = await self._sources.add(connection, scope_id, source)
+                stored, created = await self._sources.add_with_status(connection, scope_id, source)
+                if created and self._processing_pending is not None:
+                    for binding_name in self._source_processing_bindings:
+                        await self._processing_pending.raise_source(
+                            connection,
+                            scope_id,
+                            binding_name,
+                            stored.journal_position,
+                        )
                 revised = await writer.replace(connection, scope_id, current, prepared, stored.ref)
             except StoredPayloadConflictError as error:
                 raise BaseValueConflictError("source", (scope_id, CONTENT_SOURCE_NAME, source.name)) from error
