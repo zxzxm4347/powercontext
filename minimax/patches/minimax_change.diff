@@ -1,0 +1,33 @@
+--- a/workspace/order_service.py
++++ b/workspace/order_service.py
+@@ -18,13 +18,17 @@ TIER_DISCOUNTS = {
+     "PLATINUM": 0.15,
+ }
+ 
++GREEN_SUBSIDY_THRESHOLD = 5000.0
++GREEN_SUBSIDY_RATE = 0.05
++MAX_TOTAL_DISCOUNT_RATE = 0.18
++
+ 
+ def calculate_order_quote(
+     customer_tier: str,
+     subtotal: float,
+     currency: str = "CNY",
+     is_green_certified: bool = False,
+ ) -> OrderQuote:
+-    """根据客户等级计算订单折扣与应付金额（尚未实现 SPEC-ORD-02 绿色采购叠加与 18% 封顶）。"""
++    """根据 SPEC-ORD-01 与 SPEC-ORD-02 计算订单折扣、绿色补贴与 18% 封顶净额。"""
+     if subtotal <= 0:
+         raise ValueError("subtotal must be positive")
+     tier_key = (customer_tier or "STANDARD").strip().upper()
+@@ -33,6 +37,10 @@ def calculate_order_quote(
+ 
+     rate = TIER_DISCOUNTS[tier_key]
+     rules = ["SPEC-ORD-01"]
++
++    if is_green_certified and subtotal >= GREEN_SUBSIDY_THRESHOLD:
++        rate = min(MAX_TOTAL_DISCOUNT_RATE, round(rate + GREEN_SUBSIDY_RATE, 4))
++        rules.append("SPEC-ORD-02")
++
+     final_amt = round(subtotal * (1.0 - rate), 2)
+     return OrderQuote(

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>端侧 AI 推理性能优化与 seekdb 混合检索知识库 (StepFun × seekdb)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1080px; margin: 24px auto; padding: 0 16px; background: #f8fafc; color: #0f172a; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .badge-webgpu { background: #dcfce7; color: #166534; }
+    .badge-wasm { background: #fef9c3; color: #854d0e; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    textarea, input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; margin-top: 6px; }
+    button { background: #2563eb; color: #fff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+    button:hover { background: #1d4ed8; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+    th { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <h1>端侧 AI 推理性能优化与 seekdb 混合检索迷你知识库</h1>
+  <div class="card">
+    <h3>1. 端侧运行时状态与模型量化配置（禁止云端推理 API，100% 浏览器本地向量化）</h3>
+    <p>
+      当前推理后端：<span id="backend-badge" class="badge badge-webgpu">正在检测 WebGPU / WASM...</span>
+      | 开源模型：<code>Xenova/all-MiniLM-L6-v2</code> (ONNX Runtime Web, 384维)
+    </p>
+    <div class="grid">
+      <div>
+        <label>量化精度方案</label>
+        <select id="quant-select">
+          <option value="q8" selected>INT8 量化 (23.1 MB, 压缩比 3.91x)</option>
+          <option value="fp16">FP16 半精度 (45.4 MB, 压缩比 1.99x)</option>
+          <option value="fp32">FP32 基线 (90.4 MB, 压缩比 1.00x)</option>
+        </select>
+      </div>
+      <div>
+        <label>Embedding 批处理大小 (Batch Size)</label>
+        <select id="batch-select">
+          <option value="1">Batch = 1 (逐条基线)</option>
+          <option value="8" selected>Batch = 8 (端侧流水线批处理优化)</option>
+          <option value="16">Batch = 16</option>
+        </select>
+      </div>
+      <div>
+        <label>当前知识库集合 (Collection)</label>
+        <input id="collection-input" value="stepfun_kb_v1" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>2. 语料导入 → 浏览器本地向量化 → 写入 seekdb 并刷新索引</h3>
+    <textarea id="corpus-input" rows="5" placeholder="每行一段文档，格式：标题 | 正文内容"></textarea>
+    <button id="btn-ingest">本地计算向量并增量写入 seekdb</button>
+    <p id="ingest-status">等待导入语料...</p>
+  </div>
+
+  <div class="card">
+    <h3>3. 本地查询向量化 + seekdb 向量与全文混合检索</h3>
+    <input id="query-input" value="如何通过 WebGPU 和 INT8 量化提升浏览器端侧向量检索与 seekdb 混合查询性能？" />
+    <button id="btn-search">执行端侧向量化 + seekdb 混合检索</button>
+    <div id="timing-panel" style="margin-top: 12px; font-size: 13px; color: #334155;"></div>
+    <table id="result-table">
+      <thead>
+        <tr><th>排名</th><th>文档 ID</th><th>标题</th><th>混合得分 (seekdb)</th><th>向量距离</th><th>全文匹配分</th><th>正文摘录</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

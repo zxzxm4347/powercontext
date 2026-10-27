@@ -1,0 +1,46 @@
+{
+  "model": "Xenova/all-MiniLM-L6-v2 (ONNX Runtime Web / Transformers.js v3.1.0)",
+  "incremental_refresh_verified": true,
+  "benchmarks": [
+    {
+      "config": "FP32 量化前基线 (WASM, Batch=1)",
+      "model_size_mb": 90.4,
+      "compression_ratio": 1.0,
+      "write_and_refresh_ms": 5.55,
+      "seekdb_search_median_ms": 0.19,
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_5": 1.0
+    },
+    {
+      "config": "FP16 + WebGPU (Batch=8)",
+      "model_size_mb": 45.4,
+      "compression_ratio": 1.99,
+      "write_and_refresh_ms": 5.1,
+      "seekdb_search_median_ms": 0.17,
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_5": 1.0
+    },
+    {
+      "config": "INT8 + WebGPU (Batch=8)",
+      "model_size_mb": 23.1,
+      "compression_ratio": 3.91,
+      "write_and_refresh_ms": 4.63,
+      "seekdb_search_median_ms": 0.17,
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_5": 1.0
+    },
+    {
+      "config": "INT8 + WASM 降级路径 (Batch=8)",
+      "model_size_mb": 23.1,
+      "compression_ratio": 3.91,
+      "write_and_refresh_ms": 3.73,
+      "seekdb_search_median_ms": 0.19,
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_5": 1.0
+    }
+  ]
+}

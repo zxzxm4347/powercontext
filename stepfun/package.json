@@ -1,0 +1,15 @@
+{
+  "name": "stepfun-seekdb-edge-kb",
+  "version": "1.0.0",
+  "description": "端侧 AI 推理性能优化与 seekdb 混合检索迷你知识库应用 (WebGPU/WASM + INT8/FP16 + seekdb-js)",
+  "type": "module",
+  "scripts": {
+    "start": "python3 server.py --serve --port 8090",
+    "bench": "python3 server.py --benchmark"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.1.0",
+    "onnxruntime-web": "^1.19.0",
+    "seekdb-js": "^1.0.0"
+  }
+}

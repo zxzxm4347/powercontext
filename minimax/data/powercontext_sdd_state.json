@@ -1,0 +1,18 @@
+{
+  "scope_id": "scope_sdd_order_project",
+  "task_id": "task_green_subsidy_01",
+  "completed_items": [
+    "导入并检索 SPEC-ORD-01 / SPEC-ORD-02 有效规格",
+    "由 MiniMax 修改 workspace/order_service.py::calculate_order_quote",
+    "通过 tests/test_target_feature.py 与 tests/test_regression.py 全部断言"
+  ],
+  "todo_items": [
+    "监控后续 SPEC-ORD-2026 v2.0 规格演进"
+  ],
+  "verification_result": {
+    "status": "passed",
+    "feature_exit_code": 0,
+    "regression_exit_code": 0
+  },
+  "updated_at": "2026-10-27T19:02:49Z"
+}

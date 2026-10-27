@@ -1,0 +1,157 @@
+{
+  "app_name": "会记仇的酒馆老板 (Grudge-Keeping Tavern Keeper)",
+  "dify_dsl": "dsl/adventure_npc_chatflow.yml",
+  "verification_passed": true,
+  "turns": [
+    {
+      "session_id": "session_1_turn_1",
+      "scope_id": "scope_tavern_player_01",
+      "player_query": "老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！",
+      "node_seekdb_search": {
+        "engine": "seekdb-hybrid-search",
+        "sql_executed": "SELECT doc_id, title, category, content, MATCH(title, content, keywords) AGAINST(:query IN NATURAL LANGUAGE MODE) AS lexical_score, l2_distance(embedding, :query_vec) AS vector_distance FROM tavern_lore ORDER BY hybrid_score DESC LIMIT :top_k",
+        "query": "老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！",
+        "results": [
+          {
+            "doc_id": "lore_01",
+            "title": "迷雾森林的古代遗迹与银鳞龙传闻",
+            "category": "rumor",
+            "content": "迷雾森林深处的沉没钟塔下藏有古矮人王国的秘银宝箱，但守护宝箱的是一只嗜酒如命的亚成年银鳞龙。只有用碎盾酒馆特制的『火山椒烈性黑麦酒』才能让银鳞龙陷入酣睡。",
+            "vector_distance": 0.607,
+            "lexical_score": 3.7,
+            "hybrid_score": 0.7734
+          },
+          {
+            "doc_id": "lore_02",
+            "title": "碎盾酒馆招牌酒单与老板巴恩的规矩",
+            "category": "tavern_rule",
+            "content": "老板巴恩（Barn）最自豪的是祖传橡木桶酿造的『深炉金麦酒』（5银币/杯）。巴恩平生最恨别人糟蹋他的酒桶或逃单；一旦有人搞恶作剧往酒桶里乱加东西，巴恩不仅会记仇一辈子、把酒价翻三倍，还会逼肇事者去迷雾森林采集火绒草赔罪，不过误打误撞加了辣椒粉反而可能酿出驯服银鳞龙的『火山椒烈性黑麦酒』。",
+            "vector_distance": 0.5261,
+            "lexical_score": 1.75,
+            "hybrid_score": 0.6265
+          }
+        ]
+      },
+      "node_powercontext_recall": {
+        "scope_id": "scope_tavern_player_01",
+        "favorability": 60,
+        "grudges": [],
+        "prepared_context": "BEGIN_POWERCONTEXT_MEMORY\nScope: scope_tavern_player_01 | 当前老板好感度: 60/100\n【重点记仇账本】：暂无恶作剧记录，老板态度友善。\n【历史互动记忆片段】：\n- (src_init_00) 玩家初次登记为碎盾酒馆冒险者，巴恩老板赠送了一碟烤坚果。\nEND_POWERCONTEXT_MEMORY",
+        "citations": [
+          "src_init_00"
+        ]
+      },
+      "node_llm_reply": "巴恩老板豪爽地大笑一声，给你满上一大杯冒着绵密泡沫的『深炉金麦酒』（5银币）：\n“哈哈，朋友，眼光不错！说到你打听的事儿——迷雾森林深处的沉没钟塔下藏有古矮人王国的秘银宝箱，但守护宝箱的是一只嗜酒如命的亚成年银鳞龙。只有用碎盾酒馆特制的『火山椒烈性黑麦酒』才能让银鳞龙陷入酣睡。 你要是有胆量去闯一闯，记得先看看门口的悬赏栏！”\n[好感度变化: +5 -> 65/100 | 当前剧情状态: 友善交谈，获得迷雾森林银鳞龙情报 | seekdb命中文档: lore_01]",
+      "node_powercontext_capture": {
+        "status": "captured",
+        "scope_id": "scope_tavern_player_01",
+        "source_id": "src_002",
+        "favorability": 65,
+        "active_grudges": []
+      }
+    },
+    {
+      "session_id": "session_1_turn_2",
+      "scope_id": "scope_tavern_player_01",
+      "player_query": "（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。",
+      "node_seekdb_search": {
+        "engine": "seekdb-hybrid-search",
+        "sql_executed": "SELECT doc_id, title, category, content, MATCH(title, content, keywords) AGAINST(:query IN NATURAL LANGUAGE MODE) AS lexical_score, l2_distance(embedding, :query_vec) AS vector_distance FROM tavern_lore ORDER BY hybrid_score DESC LIMIT :top_k",
+        "query": "（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。",
+        "results": [
+          {
+            "doc_id": "lore_02",
+            "title": "碎盾酒馆招牌酒单与老板巴恩的规矩",
+            "category": "tavern_rule",
+            "content": "老板巴恩（Barn）最自豪的是祖传橡木桶酿造的『深炉金麦酒』（5银币/杯）。巴恩平生最恨别人糟蹋他的酒桶或逃单；一旦有人搞恶作剧往酒桶里乱加东西，巴恩不仅会记仇一辈子、把酒价翻三倍，还会逼肇事者去迷雾森林采集火绒草赔罪，不过误打误撞加了辣椒粉反而可能酿出驯服银鳞龙的『火山椒烈性黑麦酒』。",
+            "vector_distance": 0.4629,
+            "lexical_score": 4.15,
+            "hybrid_score": 0.8102
+          },
+          {
+            "doc_id": "lore_01",
+            "title": "迷雾森林的古代遗迹与银鳞龙传闻",
+            "category": "rumor",
+            "content": "迷雾森林深处的沉没钟塔下藏有古矮人王国的秘银宝箱，但守护宝箱的是一只嗜酒如命的亚成年银鳞龙。只有用碎盾酒馆特制的『火山椒烈性黑麦酒』才能让银鳞龙陷入酣睡。",
+            "vector_distance": 0.4895,
+            "lexical_score": 0.35,
+            "hybrid_score": 0.4495
+          }
+        ]
+      },
+      "node_powercontext_recall": {
+        "scope_id": "scope_tavern_player_01",
+        "favorability": 65,
+        "grudges": [],
+        "prepared_context": "BEGIN_POWERCONTEXT_MEMORY\nScope: scope_tavern_player_01 | 当前老板好感度: 65/100\n【重点记仇账本】：暂无恶作剧记录，老板态度友善。\n【历史互动记忆片段】：\n- (src_init_00) 玩家初次登记为碎盾酒馆冒险者，巴恩老板赠送了一碟烤坚果。\n- (src_002) [session_1_turn_1] 玩家：老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！ | 好感度变化：+5 -> 当前好感度 65\nEND_POWERCONTEXT_MEMORY",
+        "citations": [
+          "src_init_00",
+          "src_002"
+        ]
+      },
+      "node_llm_reply": "“咳咳咳——！！什么味道这么冲？！”巴恩老板刚抿了一口橡木桶里的深炉金麦酒，胡子气得直翘，转身一眼逮住了还在偷笑的你：“好哇你个臭小子，竟敢往我祖传的『深炉金麦酒』桶里倒辣椒粉！我巴恩的小本本今天把你记下了！以后你喝酒三倍价钱！不过……咦？这股火辣劲儿，倒有点像古方里能让迷雾森林那头银鳞龙睡大觉的『火山椒烈性黑麦酒』？少废话，账我先记着！”\n[好感度变化: -35 -> 30/100 | 当前剧情状态: 触发老板记仇账本 & 意外解锁火山椒烈酒线索 | 记忆写入: prank_grudge]",
+      "node_powercontext_capture": {
+        "status": "captured",
+        "scope_id": "scope_tavern_player_01",
+        "source_id": "src_003",
+        "favorability": 30,
+        "active_grudges": [
+          "玩家在 session_1_turn_2 搞恶作剧：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。"
+        ]
+      }
+    },
+    {
+      "session_id": "session_2_turn_1_new_conversation",
+      "scope_id": "scope_tavern_player_01",
+      "player_query": "嘿巴恩，我隔了两天又来喝酒啦！今天酒馆有什么新委托？",
+      "node_seekdb_search": {
+        "engine": "seekdb-hybrid-search",
+        "sql_executed": "SELECT doc_id, title, category, content, MATCH(title, content, keywords) AGAINST(:query IN NATURAL LANGUAGE MODE) AS lexical_score, l2_distance(embedding, :query_vec) AS vector_distance FROM tavern_lore ORDER BY hybrid_score DESC LIMIT :top_k",
+        "query": "嘿巴恩，我隔了两天又来喝酒啦！今天酒馆有什么新委托？",
+        "results": [
+          {
+            "doc_id": "lore_03",
+            "title": "酒馆今日悬赏委托栏",
+            "category": "quest",
+            "content": "【悬赏一】清理酒馆地下酒窖的偷酒灰毛鼠（赏金20银币）；【悬赏二】前往迷雾森林钟塔找回巴恩失落的铁砧徽章（赏金100银币及终身半价喝酒特权）。",
+            "vector_distance": 0.517,
+            "lexical_score": 1.4,
+            "hybrid_score": 0.5822
+          },
+          {
+            "doc_id": "lore_02",
+            "title": "碎盾酒馆招牌酒单与老板巴恩的规矩",
+            "category": "tavern_rule",
+            "content": "老板巴恩（Barn）最自豪的是祖传橡木桶酿造的『深炉金麦酒』（5银币/杯）。巴恩平生最恨别人糟蹋他的酒桶或逃单；一旦有人搞恶作剧往酒桶里乱加东西，巴恩不仅会记仇一辈子、把酒价翻三倍，还会逼肇事者去迷雾森林采集火绒草赔罪，不过误打误撞加了辣椒粉反而可能酿出驯服银鳞龙的『火山椒烈性黑麦酒』。",
+            "vector_distance": 0.6021,
+            "lexical_score": 1.35,
+            "hybrid_score": 0.5545
+          }
+        ]
+      },
+      "node_powercontext_recall": {
+        "scope_id": "scope_tavern_player_01",
+        "favorability": 30,
+        "grudges": [
+          "玩家在 session_1_turn_2 搞恶作剧：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。"
+        ],
+        "prepared_context": "BEGIN_POWERCONTEXT_MEMORY\nScope: scope_tavern_player_01 | 当前老板好感度: 30/100\n【重点记仇账本 (Active Grudges)】：\n- 玩家在 session_1_turn_2 搞恶作剧：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。 (状态：未消气，酒价翻三倍，需完成迷雾森林任务将功折罪)\n【历史互动记忆片段】：\n- (src_init_00) 玩家初次登记为碎盾酒馆冒险者，巴恩老板赠送了一碟烤坚果。\n- (src_002) [session_1_turn_1] 玩家：老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！ | 好感度变化：+5 -> 当前好感度 65\n- (src_003) [session_1_turn_2] 玩家：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。 | 好感度变化：-35 -> 当前好感度 30\nEND_POWERCONTEXT_MEMORY",
+        "citations": [
+          "src_init_00",
+          "src_002",
+          "src_003"
+        ]
+      },
+      "node_llm_reply": "巴恩老板一看到你推门进来，立刻把擦杯子的抹布往吧台上一摔，翻开油腻的记仇小本本：\n“哟！这不是上次【玩家在 session_1_turn_2 搞恶作剧：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。】的混球吗？你还敢跨进我碎盾酒馆的大门！现在你在我这儿好感度只有 30/100，想喝麦酒先付三倍银币（15银币/杯）！想让我消气？正好你上次折腾出的那桶『火山椒烈性黑麦酒』还在后院，你带着它去迷雾森林沉没钟塔，把那头嗜酒的银鳞龙灌醉，帮我找回失落的『铁砧徽章』（悬赏二），咱们之前的账就一笔勾销！”\n[好感度变化: +5 -> 35/100 | 当前剧情状态: 跨会话记仇生效，触发专属赎罪任务『灌醉银鳞龙夺回铁砧徽章』 | PowerContext引用: src_init_00, src_002, src_003]",
+      "node_powercontext_capture": {
+        "status": "captured",
+        "scope_id": "scope_tavern_player_01",
+        "source_id": "src_004",
+        "favorability": 35,
+        "active_grudges": [
+          "玩家在 session_1_turn_2 搞恶作剧：（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。"
+        ]
+      }
+    }
+  ]
+}

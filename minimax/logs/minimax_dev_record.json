@@ -1,0 +1,55 @@
+{
+  "model": "MiniMax-Text-01",
+  "api_endpoint": "https://api.minimax.chat/v1/text/chatcompletion_v2",
+  "task": "实现 SPEC-ORD-02 大额绿色低碳采购叠加补贴（subtotal >= 5000 且 is_green_certified=True 时叠加 5% 折扣，总折扣率封顶 18%），同时保持 SPEC-ORD-01 原有等级折扣与异常校验兼容。",
+  "provided_sdd_context": {
+    "task_description": "实现 SPEC-ORD-02 大额绿色低碳采购叠加补贴（subtotal >= 5000 且 is_green_certified=True 时叠加 5% 折扣，总折扣率封顶 18%），同时保持 SPEC-ORD-01 原有等级折扣与异常校验兼容。",
+    "applicable_specs": [
+      {
+        "clause": "SPEC-ORD-01",
+        "source_path": "specs/order_discount_spec_v1.md",
+        "version_tag": "v1.0",
+        "content": "## [SPEC-ORD-01] 基础会员等级折扣规则\n- `STANDARD` 客户：默认无等级折扣（折扣率 `0.0`）。\n- `GOLD` 客户：享受 `10%` 折扣（折扣率 `0.10`）。\n- `PLATINUM` 客户：享受 `15%` 折扣（折扣率 `0.15`）。\n- 原有兼容约束：订单金额 `subtotal <= 0` 时必须抛出 `ValueError(\"subtotal must be positive\")`；货币代码必须转换为大写并保留两位小数舍入。"
+      },
+      {
+        "clause": "SPEC-ORD-02",
+        "source_path": "specs/order_discount_spec_v1.md",
+        "version_tag": "v1.0",
+        "content": "## [SPEC-ORD-02] 大额绿色低碳采购叠加补贴与封顶约束（本次新增任务目标）\n- 当订单同时满足以下两个条件时：\n  1. `is_green_certified=True`（绿色低碳认证采购单）\n  2. `subtotal >= 5000.0`\n  额外叠加 `5%` 的绿色采购补贴（即总折扣率增加 `0.05`）。\n- **总折扣率上限约束（Cap Rule）**：任何订单的最终合成折扣率 `total_discount_rate` **不得超过 `0.18`（18%）**。例如 `PLATINUM`（15%）叠加绿色采购补贴（5%）后，合成折扣率应被封顶为 `0.18`，应付净额 `final_amount = round(subtotal * (1 - total_discount_rate), 2)`。"
+      }
+    ],
+    "target_code_symbols": [
+      {
+        "source_path": "workspace/order_service.py",
+        "symbol": "calculate_order_quote"
+      }
+    ],
+    "verification_tests": [
+      {
+        "source_path": "tests/test_target_feature.py",
+        "test_suite": "TestGreenSubsidyFeature",
+        "kind": "test_feature"
+      },
+      {
+        "source_path": "tests/test_regression.py",
+        "test_suite": "TestOrderRegression",
+        "kind": "test_regression"
+      }
+    ],
+    "task_state_from_powercontext": {
+      "completed_items": [],
+      "todo_items": [
+        "定位 SPEC-ORD-01 与 SPEC-ORD-02 有效规格条款",
+        "使用 MiniMax 修改 workspace/order_service.py::calculate_order_quote",
+        "运行 tests/test_target_feature.py 与 tests/test_regression.py 验证修改"
+      ],
+      "last_verification": {
+        "status": "not_run"
+      }
+    }
+  },
+  "generated_patch_path": "patches/minimax_change.diff",
+  "modified_file": "workspace/order_service.py",
+  "modified_symbol": "calculate_order_quote",
+  "summary_of_changes": "依据 SPEC-ORD-02 增加 GREEN_SUBSIDY_THRESHOLD=5000.0、GREEN_SUBSIDY_RATE=0.05 与 MAX_TOTAL_DISCOUNT_RATE=0.18，当 is_green_certified 且 subtotal >= 5000.0 时叠加 5% 折扣并按 0.18 封顶，同时保留 SPEC-ORD-01 全部既有行为。"
+}

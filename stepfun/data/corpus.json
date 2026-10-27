@@ -1,0 +1,51 @@
+{
+  "corpus": [
+    {
+      "doc_id": "doc_01",
+      "title": "WebGPU 与 ONNX INT8 端侧模型量化方案",
+      "content": "对 all-MiniLM-L6-v2 采用 ONNX 动态 INT8 量化后，模型体积由 90.4 MB 降至 23.1 MB，压缩比达 3.91x，在 WebGPU 后端下批量向量化吞吐显著提升。"
+    },
+    {
+      "doc_id": "doc_02",
+      "title": "seekdb 向量与全文混合检索内核机制",
+      "content": "seekdb 在单条 SQL 查询中同时计算 HNSW 向量距离 l2_distance 与 FULLTEXT 倒排相关性 MATCH AGAINST，通过加权融合公式返回排序结果。"
+    },
+    {
+      "doc_id": "doc_03",
+      "title": "WASM 自动降级与跨设备兼容性策略",
+      "content": "当浏览器不支持 navigator.gpu 或无法获取 WebGPU Adapter 时，运行时自动降级至 ONNX Runtime Web WASM SIMD 后端，并在界面顶部横幅提示当前后端状态。"
+    },
+    {
+      "doc_id": "doc_04",
+      "title": "增量导入与索引刷新一致性管理",
+      "content": "连续向同一知识库集合增量导入新文档后，通过显式索引刷新点确保新增向量与分词立即可检索，并按 collection_id 隔离不同会话知识库状态。"
+    },
+    {
+      "doc_id": "doc_05",
+      "title": "端侧 Embedding 微批处理与流水线预热优化",
+      "content": "将单条逐次推理改为 Batch Size = 8 的微批处理，并在页面空闲时预热 WebGPU 着色器管线，可显著降低冷启动后的端到端查询延迟。"
+    }
+  ],
+  "queries": [
+    {
+      "q": "INT8 量化后的模型体积和压缩比是多少？",
+      "gold_doc": "doc_01"
+    },
+    {
+      "q": "seekdb 如何完成向量和全文混合检索？",
+      "gold_doc": "doc_02"
+    },
+    {
+      "q": "浏览器不支持 WebGPU 时如何自动降级到 WASM？",
+      "gold_doc": "doc_03"
+    },
+    {
+      "q": "增量导入新文档后如何保证索引刷新即可检索？",
+      "gold_doc": "doc_04"
+    },
+    {
+      "q": "如何通过微批处理和管线预热降低推理延迟？",
+      "gold_doc": "doc_05"
+    }
+  ]
+}

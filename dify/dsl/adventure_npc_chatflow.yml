@@ -1,0 +1,154 @@
+app:
+  description: "会记仇的酒馆老板（Grudge-Keeping Tavern Keeper）—— 基于 Dify + PowerContext 跨会话记忆与 seekdb 奇幻设定混合检索的互动角色扮演游戏"
+  icon: "🍺"
+  icon_background: "#FFEAD5"
+  mode: advanced-chat
+  name: "会记仇的酒馆老板 (Tavern NPC with PowerContext & seekdb)"
+  use_icon_as_answer_icon: true
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables:
+    - id: cv_player_id
+      name: player_id
+      value_type: string
+      value: "adventurer_01"
+      description: "当前玩家唯一标识，关联 PowerContext Scope"
+    - id: cv_favorability
+      name: favorability
+      value_type: number
+      value: 50
+      description: "老板对玩家的好感度（0-100）"
+  environment_variables:
+    - id: env_powercontext_url
+      name: POWERCONTEXT_API_URL
+      value_type: string
+      value: "http://127.0.0.1:8000"
+    - id: env_bridge_url
+      name: SEEKDB_BRIDGE_URL
+      value_type: string
+      value: "http://127.0.0.1:8088"
+  features:
+    opening_statement: "欢迎来到『碎盾酒馆』！我是老板巴恩。无论你想打听迷雾森林的传闻、点一杯矮人烈酒，还是想搞点恶作剧……劝你小心点，我巴恩记性好得很，几年前欠我酒钱的家伙我都记着呢！"
+    suggested_questions:
+      - "老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！"
+      - "（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。"
+      - "嘿巴恩，还记得我上次在酒馆里干了什么吗？今天有什么新委托？"
+    suggested_questions_after_answer:
+      enabled: true
+  graph:
+    nodes:
+      - id: "node_start"
+        data:
+          title: "玩家输入 (Start)"
+          type: start
+          variables:
+            - label: "玩家角色ID (player_scope)"
+              variable: player_scope
+              type: text-input
+              required: false
+              default: "scope_tavern_player_01"
+      - id: "node_seekdb_search"
+        data:
+          title: "seekdb 世界观与设定混合检索"
+          type: http-request
+          method: post
+          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/seekdb/hybrid_search"
+          headers: "Content-Type: application/json"
+          body:
+            type: json
+            data: |
+              {
+                "query": "{{#sys.query#}}",
+                "top_k": 3
+              }
+          timeout:
+            connect: 5
+            read: 15
+            write: 10
+      - id: "node_powercontext_recall"
+        data:
+          title: "PowerContext 玩家历史记忆与好感上下文召回"
+          type: http-request
+          method: post
+          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/powercontext/prepare"
+          headers: "Content-Type: application/json"
+          body:
+            type: json
+            data: |
+              {
+                "scope_id": "{{#node_start.player_scope#}}",
+                "query": "{{#sys.query#}}",
+                "max_chars": 1500
+              }
+          timeout:
+            connect: 5
+            read: 15
+            write: 10
+      - id: "node_llm_judge_and_reply"
+        data:
+          title: "NPC 剧情推进与反应生成 (LLM)"
+          type: llm
+          model:
+            provider: openai_api_compatible
+            name: qwen-plus
+            mode: chat
+            completion_params:
+              temperature: 0.7
+              max_tokens: 800
+          prompt_template:
+            - role: system
+              text: |
+                你是『碎盾酒馆』的老板巴恩（Barn），一位脾气火爆但重情重义的退役矮人战士。
+                请结合以下两路实时上下文回应玩家，推动互动剧情：
+                1. 【seekdb 检索到的酒馆设定与奇幻传闻】：
+                {{#node_seekdb_search.body#}}
+                2. 【PowerContext 召回的玩家过往互动记忆（含恶作剧、欠账或帮助记录）】：
+                {{#node_powercontext_recall.body#}}
+
+                互动规则：
+                - 如果 PowerContext 记忆显示玩家曾对你恶作剧（如往酒里倒辣椒粉、逃单），你必须在对话中翻旧账、提高酒价或布置惩罚任务；
+                - 如果玩家询问世界传闻或任务，结合 seekdb 检索出的设定给出绘声绘色的回答；
+                - 在回复末尾附上当前状态栏：`[好感度变化 | 当前剧情状态 | 记忆触发点]`。
+            - role: user
+              text: "{{#sys.query#}}"
+      - id: "node_powercontext_capture"
+        data:
+          title: "PowerContext 记录本次互动与恶作剧事件"
+          type: http-request
+          method: post
+          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/powercontext/capture"
+          headers: "Content-Type: application/json"
+          body:
+            type: json
+            data: |
+              {
+                "scope_id": "{{#node_start.player_scope#}}",
+                "player_input": "{{#sys.query#}}",
+                "npc_reply": "{{#node_llm_judge_and_reply.text#}}"
+              }
+          timeout:
+            connect: 5
+            read: 15
+            write: 10
+      - id: "node_answer"
+        data:
+          title: "返回酒馆老板回应 (Answer)"
+          type: answer
+          answer: "{{#node_llm_judge_and_reply.text#}}"
+    edges:
+      - id: "e1"
+        source: "node_start"
+        target: "node_seekdb_search"
+      - id: "e2"
+        source: "node_seekdb_search"
+        target: "node_powercontext_recall"
+      - id: "e3"
+        source: "node_powercontext_recall"
+        target: "node_llm_judge_and_reply"
+      - id: "e4"
+        source: "node_llm_judge_and_reply"
+        target: "node_powercontext_capture"
+      - id: "e5"
+        source: "node_powercontext_capture"
+        target: "node_answer"

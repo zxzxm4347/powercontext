@@ -1,0 +1,19 @@
+[
+  {
+    "engine": "seekdb-engineering-index",
+    "sql": "SELECT asset_id, asset_kind, source_path, symbol_or_clause, version_tag, content, l2_distance(embedding, :q_vec) AS dist FROM sdd_engineering_assets ORDER BY dist ASC",
+    "task_query": "实现 SPEC-ORD-02 大额绿色低碳采购叠加补贴（subtotal >= 5000 且 is_green_certified=True 时叠加 5% 折扣，总折扣率封顶 18%），同时保持 SPEC-ORD-01 原有等级折扣与异常校验兼容。",
+    "matched_specs": [
+      "SPEC-ORD-01",
+      "SPEC-ORD-02"
+    ],
+    "matched_code": [
+      "workspace/order_service.py::calculate_order_quote"
+    ],
+    "matched_tests": [
+      "tests/test_target_feature.py::TestGreenSubsidyFeature",
+      "tests/test_regression.py::TestOrderRegression"
+    ],
+    "timestamp": "2026-10-27T19:02:49Z"
+  }
+]
