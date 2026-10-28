@@ -1,154 +1,1033 @@
 app:
-  description: "会记仇的酒馆老板（Grudge-Keeping Tavern Keeper）—— 基于 Dify + PowerContext 跨会话记忆与 seekdb 奇幻设定混合检索的互动角色扮演游戏"
+  description: "基于 Dify Chatflow + OceanBase seekdb（向量与全文混合检索）+ PowerContext（跨会话版本化记忆引擎）构建的奇幻酒馆记仇老板互动应用。"
   icon: "🍺"
-  icon_background: "#FFEAD5"
+  icon_background: "#FEF3C7"
   mode: advanced-chat
-  name: "会记仇的酒馆老板 (Tavern NPC with PowerContext & seekdb)"
+  name: "酒馆老板的记仇簿 (Tavern Keeper's Grudge Ledger)"
   use_icon_as_answer_icon: true
 kind: app
-version: 0.1.5
+version: 0.5.0
 workflow:
   conversation_variables:
-    - id: cv_player_id
-      name: player_id
-      value_type: string
-      value: "adventurer_01"
-      description: "当前玩家唯一标识，关联 PowerContext Scope"
-    - id: cv_favorability
-      name: favorability
+    - description: "玩家当前好感度分值"
+      id: "conv-var-favorability-01"
+      name: "favorability"
+      selector:
+        - conversation
+        - favorability
+      value: 60
       value_type: number
-      value: 50
-      description: "老板对玩家的好感度（0-100）"
+    - description: "玩家在 PowerContext 中的专属 Scope ID"
+      id: "conv-var-scope-id-02"
+      name: "scope_id"
+      selector:
+        - conversation
+        - scope_id
+      value: ""
+      value_type: string
   environment_variables:
-    - id: env_powercontext_url
-      name: POWERCONTEXT_API_URL
-      value_type: string
+    - description: "PowerContext 记忆引擎 HTTP 服务地址"
+      id: "env-pc-base-url-01"
+      name: "POWERCONTEXT_BASE_URL"
       value: "http://127.0.0.1:8000"
-    - id: env_bridge_url
-      name: SEEKDB_BRIDGE_URL
       value_type: string
+    - description: "OceanBase seekdb 混合检索与账本桥接服务地址"
+      id: "env-seekdb-url-02"
+      name: "SEEKDB_BRIDGE_URL"
       value: "http://127.0.0.1:8088"
+      value_type: string
   features:
-    opening_statement: "欢迎来到『碎盾酒馆』！我是老板巴恩。无论你想打听迷雾森林的传闻、点一杯矮人烈酒，还是想搞点恶作剧……劝你小心点，我巴恩记性好得很，几年前欠我酒钱的家伙我都记着呢！"
+    file_upload:
+      enabled: false
+    opening_statement: "🍺 欢迎来到『碎盾酒馆』！我是老板老巴恩。想打听迷雾森林的独眼银鳞龙、接取灰烬矿坑的悬赏委托，还是来一杯招牌『深炉金麦酒』？可别趁我转身往酒桶里乱加料——老巴恩的记仇账本可是刻在 OceanBase seekdb 与 PowerContext 里的！"
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
     suggested_questions:
-      - "老板，来一杯最烈的麦酒，顺便跟我讲讲迷雾森林的宝藏传闻！"
-      - "（恶作剧）趁老板转身，偷偷往他的招牌麦酒桶里倒了一勺辣椒粉。"
-      - "嘿巴恩，还记得我上次在酒馆里干了什么吗？今天有什么新委托？"
+      - "老板，先来一杯招牌深炉金麦酒！顺便打听下迷雾森林里那头独眼银鳞龙和秘银宝箱的传闻。"
+      - "（趁老板转身擦酒杯，偷偷往招牌深炉金麦酒桶里倒了一勺火山辣椒粉！）老板，现在能把高回报的秘密委托交给我了吗？"
+      - "巴恩大叔，昨晚往麦酒桶倒辣椒粉是我混蛋！我特地带了您最爱的冰霜蜂蜜烤肉和矮人陈酿来赔罪，银鳞龙祭坛的暗道和委托能告诉我了吗？"
     suggested_questions_after_answer:
       enabled: true
+    text_to_speech:
+      enabled: false
   graph:
+    edges:
+      - id: "e-start-prepare"
+        source: "start"
+        sourceHandle: "source"
+        target: "prepare_requests"
+        targetHandle: "target"
+      - id: "e-prepare-scope"
+        source: "prepare_requests"
+        sourceHandle: "source"
+        target: "ensure_scope"
+        targetHandle: "target"
+      - id: "e-scope-recall-req"
+        source: "ensure_scope"
+        sourceHandle: "source"
+        target: "build_recall_requests"
+        targetHandle: "target"
+      - id: "e-recall-req-capture"
+        source: "build_recall_requests"
+        sourceHandle: "source"
+        target: "pc_capture_source"
+        targetHandle: "target"
+      - id: "e-capture-prepare-ctx"
+        source: "pc_capture_source"
+        sourceHandle: "source"
+        target: "pc_prepare_context"
+        targetHandle: "target"
+      - id: "e-prepare-ctx-list-entries"
+        source: "pc_prepare_context"
+        sourceHandle: "source"
+        target: "pc_list_entries"
+        targetHandle: "target"
+      - id: "e-list-entries-seekdb"
+        source: "pc_list_entries"
+        sourceHandle: "source"
+        target: "seekdb_hybrid_search"
+        targetHandle: "target"
+      - id: "e-seekdb-assemble"
+        source: "seekdb_hybrid_search"
+        sourceHandle: "source"
+        target: "assemble_npc_context"
+        targetHandle: "target"
+      - id: "e-assemble-judge"
+        source: "assemble_npc_context"
+        sourceHandle: "source"
+        target: "event_judge_llm"
+        targetHandle: "target"
+      - id: "e-judge-narrator"
+        source: "event_judge_llm"
+        sourceHandle: "source"
+        target: "npc_response_llm"
+        targetHandle: "target"
+      - id: "e-narrator-writeback"
+        source: "npc_response_llm"
+        sourceHandle: "source"
+        target: "build_writeback_payloads"
+        targetHandle: "target"
+      - id: "e-writeback-remember"
+        source: "build_writeback_payloads"
+        sourceHandle: "source"
+        target: "pc_remember_memory"
+        targetHandle: "target"
+      - id: "e-remember-attach-cit"
+        source: "pc_remember_memory"
+        sourceHandle: "source"
+        target: "attach_pc_citation"
+        targetHandle: "target"
+      - id: "e-attach-cit-seekdb-grudge"
+        source: "attach_pc_citation"
+        sourceHandle: "source"
+        target: "seekdb_record_grudge"
+        targetHandle: "target"
+      - id: "e-seekdb-grudge-format"
+        source: "seekdb_record_grudge"
+        sourceHandle: "source"
+        target: "format_final_answer"
+        targetHandle: "target"
+      - id: "e-format-answer"
+        source: "format_final_answer"
+        sourceHandle: "source"
+        target: "answer"
+        targetHandle: "target"
     nodes:
-      - id: "node_start"
-        data:
-          title: "玩家输入 (Start)"
+      - data:
+          desc: "接收玩家标识、会话标识、分类过滤与当前对话输入"
+          selected: false
+          title: "开始 (Start)"
           type: start
           variables:
-            - label: "玩家角色ID (player_scope)"
-              variable: player_scope
+            - default: "player_ache"
+              label: "玩家唯一标识 (player_id)"
+              max_length: 64
+              options: []
+              required: true
               type: text-input
+              variable: "player_id"
+            - default: "阿澈"
+              label: "玩家角色名 (player_name)"
+              max_length: 64
+              options: []
               required: false
-              default: "scope_tavern_player_01"
-      - id: "node_seekdb_search"
-        data:
-          title: "seekdb 世界观与设定混合检索"
-          type: http-request
-          method: post
-          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/seekdb/hybrid_search"
-          headers: "Content-Type: application/json"
-          body:
-            type: json
-            data: |
-              {
-                "query": "{{#sys.query#}}",
-                "top_k": 3
-              }
-          timeout:
-            connect: 5
-            read: 15
-            write: 10
-      - id: "node_powercontext_recall"
-        data:
-          title: "PowerContext 玩家历史记忆与好感上下文召回"
-          type: http-request
-          method: post
-          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/powercontext/prepare"
-          headers: "Content-Type: application/json"
-          body:
-            type: json
-            data: |
-              {
-                "scope_id": "{{#node_start.player_scope#}}",
-                "query": "{{#sys.query#}}",
-                "max_chars": 1500
-              }
-          timeout:
-            connect: 5
-            read: 15
-            write: 10
-      - id: "node_llm_judge_and_reply"
-        data:
-          title: "NPC 剧情推进与反应生成 (LLM)"
-          type: llm
-          model:
-            provider: openai_api_compatible
-            name: qwen-plus
-            mode: chat
-            completion_params:
-              temperature: 0.7
-              max_tokens: 800
-          prompt_template:
-            - role: system
-              text: |
-                你是『碎盾酒馆』的老板巴恩（Barn），一位脾气火爆但重情重义的退役矮人战士。
-                请结合以下两路实时上下文回应玩家，推动互动剧情：
-                1. 【seekdb 检索到的酒馆设定与奇幻传闻】：
-                {{#node_seekdb_search.body#}}
-                2. 【PowerContext 召回的玩家过往互动记忆（含恶作剧、欠账或帮助记录）】：
-                {{#node_powercontext_recall.body#}}
+              type: text-input
+              variable: "player_name"
+            - default: "session_1"
+              label: "会话编号 (session_id)"
+              max_length: 64
+              options: []
+              required: false
+              type: text-input
+              variable: "session_id"
+            - default: "all"
+              label: "传闻检索分类 (category_filter)"
+              max_length: 32
+              options:
+                - "all"
+                - "monster"
+                - "quest"
+                - "tavern_rule"
+                - "item"
+                - "rumor"
+              required: false
+              type: select
+              variable: "category_filter"
+        height: 140
+        id: "start"
+        position:
+          x: 60
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import json
 
-                互动规则：
-                - 如果 PowerContext 记忆显示玩家曾对你恶作剧（如往酒里倒辣椒粉、逃单），你必须在对话中翻旧账、提高酒价或布置惩罚任务；
-                - 如果玩家询问世界传闻或任务，结合 seekdb 检索出的设定给出绘声绘色的回答；
-                - 在回复末尾附上当前状态栏：`[好感度变化 | 当前剧情状态 | 记忆触发点]`。
-            - role: user
-              text: "{{#sys.query#}}"
-      - id: "node_powercontext_capture"
-        data:
-          title: "PowerContext 记录本次互动与恶作剧事件"
-          type: http-request
-          method: post
-          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/powercontext/capture"
-          headers: "Content-Type: application/json"
+            def main(query: str, player_id: str, player_name: str, session_id: str, category_filter: str) -> dict:
+                pid = (player_id or "player_ache").strip()
+                pname = (player_name or "阿澈").strip()
+                sid = (session_id or "session_1").strip()
+                cat = (category_filter or "all").strip()
+                clean_q = (query or "").strip() or "打听酒馆传闻"
+                scope_key = f"tavern-grudge-{pid}"
+                scope_req = {
+                    "title": f"碎盾酒馆恩怨账本-{pname}({pid})",
+                    "summary": f"记录冒险者{pname}({pid})在碎盾酒馆的打听、恶作剧记仇与赔罪跨会话记忆",
+                    "idempotency_key": scope_key,
+                }
+                seekdb_req = {
+                    "player_id": pid,
+                    "player_name": pname,
+                    "query_text": clean_q,
+                    "category_filter": cat,
+                    "top_k": 3,
+                }
+                return {
+                    "clean_query": clean_q,
+                    "player_id": pid,
+                    "player_name": pname,
+                    "session_id": sid,
+                    "scope_key": scope_key,
+                    "scope_request_json": json.dumps(scope_req, ensure_ascii=False),
+                    "seekdb_search_json": json.dumps(seekdb_req, ensure_ascii=False),
+                }
+          code_language: python3
+          desc: "构造 PowerContext Scope 幂等创建请求与 seekdb 混合检索请求"
+          outputs:
+            clean_query:
+              children: null
+              type: string
+            player_id:
+              children: null
+              type: string
+            player_name:
+              children: null
+              type: string
+            scope_key:
+              children: null
+              type: string
+            scope_request_json:
+              children: null
+              type: string
+            seekdb_search_json:
+              children: null
+              type: string
+            session_id:
+              children: null
+              type: string
+          selected: false
+          title: "构造检索与Scope请求"
+          type: code
+          variables:
+            - value_selector:
+                - sys
+                - query
+              variable: "query"
+            - value_selector:
+                - start
+                - player_id
+              variable: "player_id"
+            - value_selector:
+                - start
+                - player_name
+              variable: "player_name"
+            - value_selector:
+                - start
+                - session_id
+              variable: "session_id"
+            - value_selector:
+                - start
+                - category_filter
+              variable: "category_filter"
+        height: 98
+        id: "prepare_requests"
+        position:
+          x: 340
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
           body:
+            data:
+              - id: "body-ensure-scope-1"
+                key: ""
+                type: text
+                value: "{{#prepare_requests.scope_request_json#}}"
             type: json
-            data: |
-              {
-                "scope_id": "{{#node_start.player_scope#}}",
-                "player_input": "{{#sys.query#}}",
-                "npc_reply": "{{#node_llm_judge_and_reply.text#}}"
-              }
+          desc: "调用 PowerContext POST /v1/scopes 创建或复用玩家专属记忆隔离域"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
           timeout:
-            connect: 5
-            read: 15
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
             write: 10
-      - id: "node_answer"
-        data:
-          title: "返回酒馆老板回应 (Answer)"
+          title: "PowerContext 确保玩家 Scope"
+          type: http-request
+          url: "{{#env.POWERCONTEXT_BASE_URL#}}/v1/scopes"
+          variables: []
+        height: 110
+        id: "ensure_scope"
+        position:
+          x: 620
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import hashlib
+            import json
+
+            def main(scope_body: str, clean_query: str, player_id: str, session_id: str) -> dict:
+                data = json.loads(scope_body or "{}")
+                scope_id = data.get("scope_id", "")
+                digest = hashlib.sha1(f"{session_id}:{clean_query}".encode("utf-8")).hexdigest()[:10]
+                source_id = f"src-{session_id}-{digest}"
+                capture_req = {
+                    "scope_id": scope_id,
+                    "source_id": source_id,
+                    "content": f"[{session_id}] 玩家({player_id})：{clean_query}",
+                    "metadata": {"player_id": player_id, "session_id": session_id},
+                }
+                # 将检索词扩展以兼顾剧情召回与历史恩怨召回
+                recall_q = f"{clean_query} 辣椒粉 麦酒 恶作剧 记仇 赔罪 烤肉 银鳞龙 秘银宝箱 委托"
+                prepare_req = {
+                    "scope_id": scope_id,
+                    "query": recall_q,
+                    "max_bytes": 4000,
+                }
+                list_req = {
+                    "scope_id": scope_id,
+                    "include_inactive": False,
+                }
+                return {
+                    "scope_id": scope_id,
+                    "source_id": source_id,
+                    "capture_source_json": json.dumps(capture_req, ensure_ascii=False),
+                    "prepare_context_json": json.dumps(prepare_req, ensure_ascii=False),
+                    "list_entries_json": json.dumps(list_req, ensure_ascii=False),
+                }
+          code_language: python3
+          desc: "解析 PowerContext 返回的 scope_id 并组装 Source 采集与 Context 准备请求"
+          outputs:
+            capture_source_json:
+              children: null
+              type: string
+            list_entries_json:
+              children: null
+              type: string
+            prepare_context_json:
+              children: null
+              type: string
+            scope_id:
+              children: null
+              type: string
+            source_id:
+              children: null
+              type: string
+          selected: false
+          title: "组装记忆召回与Source请求"
+          type: code
+          variables:
+            - value_selector:
+                - ensure_scope
+                - body
+              variable: "scope_body"
+            - value_selector:
+                - prepare_requests
+                - clean_query
+              variable: "clean_query"
+            - value_selector:
+                - prepare_requests
+                - player_id
+              variable: "player_id"
+            - value_selector:
+                - prepare_requests
+                - session_id
+              variable: "session_id"
+        height: 98
+        id: "build_recall_requests"
+        position:
+          x: 900
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-capture-source-1"
+                key: ""
+                type: text
+                value: "{{#build_recall_requests.capture_source_json#}}"
+            type: json
+          desc: "调用 PowerContext POST /v1/sources/content 记录原始对话证据流"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "PowerContext 采集原始对话 Source"
+          type: http-request
+          url: "{{#env.POWERCONTEXT_BASE_URL#}}/v1/sources/content"
+          variables: []
+        height: 110
+        id: "pc_capture_source"
+        position:
+          x: 1180
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-prepare-ctx-1"
+                key: ""
+                type: text
+                value: "{{#build_recall_requests.prepare_context_json#}}"
+            type: json
+          desc: "调用 PowerContext POST /v1/context/prepare 执行受 UTF-8 字节预算约束的跨会话上下文装配"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "PowerContext 跨会话记忆装配"
+          type: http-request
+          url: "{{#env.POWERCONTEXT_BASE_URL#}}/v1/context/prepare"
+          variables: []
+        height: 110
+        id: "pc_prepare_context"
+        position:
+          x: 1460
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-list-entries-1"
+                key: ""
+                type: text
+                value: "{{#build_recall_requests.list_entries_json#}}"
+            type: json
+          desc: "调用 PowerContext POST /v1/memory/entries/list 拉取该玩家 Scope 下的活跃记忆账目"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "PowerContext 列出活跃记忆账目"
+          type: http-request
+          url: "{{#env.POWERCONTEXT_BASE_URL#}}/v1/memory/entries/list"
+          variables: []
+        height: 110
+        id: "pc_list_entries"
+        position:
+          x: 1740
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-seekdb-search-1"
+                key: ""
+                type: text
+                value: "{{#prepare_requests.seekdb_search_json#}}"
+            type: json
+          desc: "调用 OceanBase seekdb 执行 MATCH AGAINST 全文索引 + l2_distance 向量索引单条 SQL 混合检索"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "seekdb 向量+全文混合检索"
+          type: http-request
+          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/seekdb/hybrid_search"
+          variables: []
+        height: 110
+        id: "seekdb_hybrid_search"
+        position:
+          x: 2020
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import json
+
+            def main(prepare_body: str, entries_body: str, seekdb_body: str) -> dict:
+                prep = json.loads(prepare_body or "{}")
+                entries_data = json.loads(entries_body or "{}")
+                seekdb_data = json.loads(seekdb_body or "{}")
+
+                entries = entries_data.get("entries", [])
+                player_state = seekdb_data.get("player_state", {})
+                favor = int(player_state.get("favorability", 60))
+                tier = player_state.get("attitude_tier", "普通酒客（正常接待）")
+                mult = int(player_state.get("drink_multiplier", 1))
+
+                lore_hits = seekdb_data.get("hits", [])
+                lore_lines = []
+                for idx, h in enumerate(lore_hits, 1):
+                    lore_lines.append(
+                        f"{idx}. [{h.get('lore_id')}|{h.get('category')}] 《{h.get('title')}》({h.get('region')}, {h.get('danger_level')}, 赏金:{h.get('reward_gold')}G)\n"
+                        f"   - 混合得分: {h.get('hybrid_score')} (全文MATCH={h.get('lexical_score')}, 向量l2_distance={h.get('vector_distance')})\n"
+                        f"   - 传闻详情: {h.get('content')}\n"
+                        f"   - 老板内部暗记(按好感度决定是否透露): {h.get('npc_secret_hint')}"
+                    )
+
+                entry_lines = []
+                for e in entries:
+                    cit = e.get("citation", {})
+                    mref = cit.get("memory_ref", {})
+                    entry_lines.append(
+                        f"- [entry_id={cit.get('entry_id')}, ver={cit.get('entry_version_id')}, rev={mref.get('revision')}, kind={e.get('kind')}] {e.get('text')}"
+                    )
+
+                pc_content = prep.get("content") or "（当前无召回历史上下文，玩家首次到访）"
+                return {
+                    "seekdb_lore_context": "\n".join(lore_lines) if lore_lines else "无命中传闻",
+                    "powercontext_memory_context": pc_content,
+                    "active_entries_summary": "\n".join(entry_lines) if entry_lines else "（暂无历史记忆条目）",
+                    "current_favorability": str(favor),
+                    "attitude_tier": tier,
+                    "drink_multiplier": str(mult),
+                    "seekdb_version": str(seekdb_data.get("seekdb_version", "")),
+                    "sql_trace": str(seekdb_data.get("sql_trace", "")),
+                }
+          code_language: python3
+          desc: "汇总 seekdb 混合检索结果与 PowerContext 跨会话记忆上下文"
+          outputs:
+            active_entries_summary:
+              children: null
+              type: string
+            attitude_tier:
+              children: null
+              type: string
+            current_favorability:
+              children: null
+              type: string
+            drink_multiplier:
+              children: null
+              type: string
+            powercontext_memory_context:
+              children: null
+              type: string
+            seekdb_lore_context:
+              children: null
+              type: string
+            seekdb_version:
+              children: null
+              type: string
+            sql_trace:
+              children: null
+              type: string
+          selected: false
+          title: "汇总双引擎上下文"
+          type: code
+          variables:
+            - value_selector:
+                - pc_prepare_context
+                - body
+              variable: "prepare_body"
+            - value_selector:
+                - pc_list_entries
+                - body
+              variable: "entries_body"
+            - value_selector:
+                - seekdb_hybrid_search
+                - body
+              variable: "seekdb_body"
+        height: 98
+        id: "assemble_npc_context"
+        position:
+          x: 2300
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: "分析玩家本轮言行属于正常打听、恶作剧冒犯还是诚恳赔罪，输出结构化 JSON 账目裁定"
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: "gpt-4o-mini"
+            provider: "openai"
+          prompt_template:
+            - id: "sys-judge-prompt-01"
+              role: system
+              text: |
+                你是『碎盾酒馆』的账本裁定器（Event Judge）。请根据玩家的输入、PowerContext 召回的历史记忆、以及 seekdb 检索到的酒馆规矩，判断玩家本轮行为属于以下哪一类，并严格只输出一行合法 JSON（不要 Markdown 代码块）：
+                - 如果玩家在打听传闻/点酒/正常交谈：event_type="inquiry", memory_kind="fact", favor_delta=5
+                - 如果玩家实施了恶作剧/冒犯（如往麦酒桶倒辣椒粉、逃单、砸场子）：event_type="prank", memory_kind="decision", favor_delta=-45
+                - 如果玩家带着美食美酒（如冰霜蜂蜜烤肉、矮人陈酿）诚恳赔罪道歉：event_type="apology", memory_kind="decision", favor_delta=55
+
+                输出 JSON 字段要求：
+                {
+                  "event_type": "inquiry | prank | apology",
+                  "memory_kind": "fact | decision",
+                  "favor_delta": 整数,
+                  "should_remember": true,
+                  "memory_text": "包含玩家行为、涉及物品与老板态度变化的完整记账文本（必须包含玩家原话关键名词以便后续检索命中）",
+                  "reason": "简短原因标签"
+                }
+            - id: "user-judge-prompt-02"
+              role: user
+              text: |
+                【玩家角色】：{{#prepare_requests.player_name#}} ({{#prepare_requests.player_id#}})
+                【当前好感度】：{{#assemble_npc_context.current_favorability#}} ({{#assemble_npc_context.attitude_tier#}})
+                【PowerContext 已有记忆条目】：
+                {{#assemble_npc_context.active_entries_summary#}}
+                【seekdb 命中的酒馆规矩与传闻】：
+                {{#assemble_npc_context.seekdb_lore_context#}}
+                【玩家本轮发言】：
+                {{#prepare_requests.clean_query#}}
+          selected: false
+          title: "LLM 账本事件裁定器"
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 110
+        id: "event_judge_llm"
+        position:
+          x: 2580
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          context:
+            enabled: true
+            variable_selector:
+              - assemble_npc_context
+              - seekdb_lore_context
+          desc: "基于 seekdb 混合检索传闻与 PowerContext 跨会话恩怨记忆生成酒馆老板老巴恩的沉浸式回应"
+          model:
+            completion_params:
+              max_tokens: 700
+              temperature: 0.6
+            mode: chat
+            name: "gpt-4o-mini"
+            provider: "openai"
+          prompt_template:
+            - id: "sys-narrator-prompt-01"
+              role: system
+              text: |
+                你是『碎盾酒馆』的矮人老板“老巴恩”（Barn），脾气火爆、恩怨分明，守着祖传橡木桶酿造的『深炉金麦酒』（原价 5 铜币/杯）。
+                你必须严格依据以下两大实时数据源回应玩家，严禁编造数据库之外的设定：
+
+                1. 【OceanBase seekdb 混合检索命中的酒馆传闻与内部暗记】：
+                {{#assemble_npc_context.seekdb_lore_context#}}
+
+                2. 【PowerContext 跨会话准备上下文 (Prepared Context) 与历史账目】：
+                {{#assemble_npc_context.powercontext_memory_context#}}
+                历史账目列表：
+                {{#assemble_npc_context.active_entries_summary#}}
+
+                3. 【玩家当前状态与本轮行为裁定】：
+                - 进门时好感度：{{#assemble_npc_context.current_favorability#}} / 100（{{#assemble_npc_context.attitude_tier#}}，当前酒价倍率：{{#assemble_npc_context.drink_multiplier#}}x）
+                - 本轮行为裁定 JSON：{{#event_judge_llm.text#}}
+
+                【角色扮演硬性规则】：
+                - 若本轮裁定为 `prank`（如往深炉金麦酒桶倒辣椒粉）或历史账目中存在未消解的恶作剧且玩家未赔罪：你必须勃然大怒，当面翻出旧账，宣布将深炉金麦酒价格翻三倍（15 铜币/杯），并严词拒绝透露『失落的星陨铁酒杯委托』或『断剑祭坛瀑布后的矮人逃生暗道』！
+                - 若本轮裁定为 `apology`（玩家带冰霜蜂蜜烤肉/矮人陈酿诚恳赔罪）：你既感动又嘴硬地原谅他，当场在账本上勾销辣椒粉旧怨，恢复麦酒原价（5 铜币/杯），并大方分享『断剑祭坛北侧瀑布后的矮人暗道』及『星陨铁酒杯（320 金币）』高额委托情报！
+                - 若本轮裁定为 `inquiry`（正常打听）：热情招待深炉金麦酒，引用 seekdb 检索出的传闻正面信息（如独眼银鳞龙惧怕雷鸣草、左眼旧伤），并提醒他遵守酒馆规矩。
+            - id: "user-narrator-prompt-02"
+              role: user
+              text: "玩家 {{#prepare_requests.player_name#}} 说：{{#prepare_requests.clean_query#}}"
+          selected: false
+          title: "LLM 酒馆老板老巴恩叙事"
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 110
+        id: "npc_response_llm"
+        position:
+          x: 2860
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import json
+
+            def main(
+                judge_text: str,
+                scope_id: str,
+                player_id: str,
+                player_name: str,
+                session_id: str,
+                clean_query: str,
+            ) -> dict:
+                raw = (judge_text or "").strip()
+                if raw.startswith("```"):
+                    lines = [ln for ln in raw.splitlines() if not ln.strip().startswith("```")]
+                    raw = "\n".join(lines).strip()
+                try:
+                    parsed = json.loads(raw)
+                except Exception:
+                    parsed = {
+                        "event_type": "inquiry",
+                        "memory_kind": "fact",
+                        "favor_delta": 5,
+                        "should_remember": True,
+                        "memory_text": f"玩家{player_name}在酒馆发言：{clean_query}",
+                        "reason": "fallback_parse",
+                    }
+                kind = parsed.get("memory_kind", "fact")
+                if kind not in ("fact", "decision", "preference", "todo"):
+                    kind = "decision" if parsed.get("event_type") in ("prank", "apology") else "fact"
+                mem_text = parsed.get("memory_text") or f"玩家{player_name}：{clean_query}"
+                reason = parsed.get("reason") or f"{session_id}_{parsed.get('event_type', 'turn')}"
+                favor_delta = int(parsed.get("favor_delta", 0))
+                event_type = str(parsed.get("event_type", "inquiry"))
+
+                remember_req = {
+                    "scope_id": scope_id,
+                    "kind": kind,
+                    "text": mem_text,
+                    "reason": reason,
+                }
+                grudge_req = {
+                    "player_id": player_id,
+                    "player_name": player_name,
+                    "session_id": session_id,
+                    "scope_id": scope_id,
+                    "event_type": event_type,
+                    "favor_delta": favor_delta,
+                    "summary": mem_text,
+                }
+                return {
+                    "event_type": event_type,
+                    "memory_kind": kind,
+                    "favor_delta": str(favor_delta),
+                    "memory_text": mem_text,
+                    "remember_memory_json": json.dumps(remember_req, ensure_ascii=False),
+                    "record_grudge_json": json.dumps(grudge_req, ensure_ascii=False),
+                }
+          code_language: python3
+          desc: "解析事件裁定 JSON 并构造 PowerContext /v1/memory/remember 与 seekdb 账本落库请求"
+          outputs:
+            event_type:
+              children: null
+              type: string
+            favor_delta:
+              children: null
+              type: string
+            memory_kind:
+              children: null
+              type: string
+            memory_text:
+              children: null
+              type: string
+            record_grudge_json:
+              children: null
+              type: string
+            remember_memory_json:
+              children: null
+              type: string
+          selected: false
+          title: "构造记忆与账本写回负载"
+          type: code
+          variables:
+            - value_selector:
+                - event_judge_llm
+                - text
+              variable: "judge_text"
+            - value_selector:
+                - build_recall_requests
+                - scope_id
+              variable: "scope_id"
+            - value_selector:
+                - prepare_requests
+                - player_id
+              variable: "player_id"
+            - value_selector:
+                - prepare_requests
+                - player_name
+              variable: "player_name"
+            - value_selector:
+                - prepare_requests
+                - session_id
+              variable: "session_id"
+            - value_selector:
+                - prepare_requests
+                - clean_query
+              variable: "clean_query"
+        height: 98
+        id: "build_writeback_payloads"
+        position:
+          x: 3140
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-remember-mem-1"
+                key: ""
+                type: text
+                value: "{{#build_writeback_payloads.remember_memory_json#}}"
+            type: json
+          desc: "调用 PowerContext POST /v1/memory/remember 写入版本化长期记忆并生成 entry_id / revision"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "PowerContext 写入版本化记忆"
+          type: http-request
+          url: "{{#env.POWERCONTEXT_BASE_URL#}}/v1/memory/remember"
+          variables: []
+        height: 110
+        id: "pc_remember_memory"
+        position:
+          x: 3420
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import json
+
+            def main(remember_body: str, base_grudge_json: str) -> dict:
+                rem = json.loads(remember_body or "{}")
+                grudge = json.loads(base_grudge_json or "{}")
+                entry = rem.get("entry") or {}
+                cit = entry.get("citation") or {}
+                mref = rem.get("memory") or cit.get("memory_ref") or {}
+                grudge["pc_entry_id"] = str(cit.get("entry_id", ""))
+                grudge["pc_entry_version_id"] = str(cit.get("entry_version_id", ""))
+                grudge["pc_revision"] = int(mref.get("revision", 1) or 1)
+                return {
+                    "record_grudge_json": json.dumps(grudge, ensure_ascii=False),
+                }
+          code_language: python3
+          desc: "将 PowerContext 返回的 entry_id、entry_version_id 与 revision 注入 seekdb 账本写回请求"
+          outputs:
+            record_grudge_json:
+              children: null
+              type: string
+          selected: false
+          title: "关联 PowerContext 记忆引用"
+          type: code
+          variables:
+            - value_selector:
+                - pc_remember_memory
+                - body
+              variable: "remember_body"
+            - value_selector:
+                - build_writeback_payloads
+                - record_grudge_json
+              variable: "base_grudge_json"
+        height: 98
+        id: "attach_pc_citation"
+        position:
+          x: 3560
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          authorization:
+            config: null
+            type: no-auth
+          body:
+            data:
+              - id: "body-record-grudge-1"
+                key: ""
+                type: text
+                value: "{{#attach_pc_citation.record_grudge_json#}}"
+            type: json
+          desc: "调用 OceanBase seekdb 更新玩家好感度、酒价倍率并写入 tavern_grudge_ledger 审计表"
+          headers: "Content-Type:application/json"
+          method: post
+          params: ""
+          selected: false
+          timeout:
+            connect: 10
+            max_connect_timeout: 30
+            max_read_timeout: 60
+            max_write_timeout: 30
+            read: 20
+            write: 10
+          title: "seekdb 更新玩家好感度与账本表"
+          type: http-request
+          url: "{{#env.SEEKDB_BRIDGE_URL#}}/api/v1/seekdb/record_grudge"
+          variables: []
+        height: 110
+        id: "seekdb_record_grudge"
+        position:
+          x: 3700
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          code: |
+            import json
+
+            def main(remember_body: str, grudge_body: str, seekdb_body: str) -> dict:
+                rem = json.loads(remember_body or "{}")
+                grudge = json.loads(grudge_body or "{}")
+                sdata = json.loads(seekdb_body or "{}")
+
+                entry = rem.get("entry") or {}
+                cit = entry.get("citation") or {}
+                mref = rem.get("memory") or cit.get("memory_ref") or {}
+
+                hits = sdata.get("hits", [])
+                top_hit = hits[0] if hits else {}
+
+                panel = (
+                    "📜 **【碎盾酒馆 · 恩怨账本与双引擎实时状态面板】**\n"
+                    f"- **OceanBase seekdb 引擎**：`{sdata.get('seekdb_version', 'seekdb')}` | Top1 命中：`{top_hit.get('lore_id', 'N/A')}`《{top_hit.get('title', 'N/A')}》(hybrid={top_hit.get('hybrid_score', 0)}, MATCH={top_hit.get('lexical_score', 0)}, l2_dist={top_hit.get('vector_distance', 0)})\n"
+                    f"- **PowerContext 记忆写回**：`scope_id={grudge.get('scope_id', '')}` | `entry_id={cit.get('entry_id', '')}` | `entry_version_id={cit.get('entry_version_id', '')}` | `revision={mref.get('revision', 1)}` | `kind={entry.get('kind', '')}`\n"
+                    f"- **老板好感度变更**：`{grudge.get('favor_before', 60)}` → **`{grudge.get('favor_after', 60)}`** (`delta={grudge.get('favor_delta', 0):+d}`) | 当前态度：**{grudge.get('attitude_tier', '')}** | 深炉金麦酒倍率：**{grudge.get('drink_multiplier', 1)}x**"
+                )
+                return {
+                    "ledger_panel": panel,
+                    "entry_id": str(cit.get("entry_id", "")),
+                    "entry_version_id": str(cit.get("entry_version_id", "")),
+                    "revision": str(mref.get("revision", 1)),
+                }
+          code_language: python3
+          desc: "生成包含 seekdb 混合检索得分与 PowerContext 记忆版本引用的透明审计面板"
+          outputs:
+            entry_id:
+              children: null
+              type: string
+            entry_version_id:
+              children: null
+              type: string
+            ledger_panel:
+              children: null
+              type: string
+            revision:
+              children: null
+              type: string
+          selected: false
+          title: "生成恩怨账本审计面板"
+          type: code
+          variables:
+            - value_selector:
+                - pc_remember_memory
+                - body
+              variable: "remember_body"
+            - value_selector:
+                - seekdb_record_grudge
+                - body
+              variable: "grudge_body"
+            - value_selector:
+                - seekdb_hybrid_search
+                - body
+              variable: "seekdb_body"
+        height: 98
+        id: "format_final_answer"
+        position:
+          x: 3980
+          y: 260
+        type: custom
+        width: 240
+      - data:
+          answer: |
+            {{#npc_response_llm.text#}}
+
+            ---
+            {{#format_final_answer.ledger_panel#}}
+          desc: "输出老巴恩的角色扮演回应与 seekdb + PowerContext 双引擎审计账本面板"
+          selected: false
+          title: "直接回复 (Answer)"
           type: answer
-          answer: "{{#node_llm_judge_and_reply.text#}}"
-    edges:
-      - id: "e1"
-        source: "node_start"
-        target: "node_seekdb_search"
-      - id: "e2"
-        source: "node_seekdb_search"
-        target: "node_powercontext_recall"
-      - id: "e3"
-        source: "node_powercontext_recall"
-        target: "node_llm_judge_and_reply"
-      - id: "e4"
-        source: "node_llm_judge_and_reply"
-        target: "node_powercontext_capture"
-      - id: "e5"
-        source: "node_powercontext_capture"
-        target: "node_answer"
+          variables: []
+        height: 110
+        id: "answer"
+        position:
+          x: 4260
+          y: 260
+        type: custom
+        width: 240
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.75
