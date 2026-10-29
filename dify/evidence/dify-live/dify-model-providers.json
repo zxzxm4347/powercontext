@@ -1,0 +1,326 @@
+{
+  "data": [
+    {
+      "tenant_id": "6801a5c9-569d-4200-8d3c-d9c16859e70c",
+      "provider": "langgenius/openai/openai",
+      "label": {
+        "zh_Hans": "OpenAI",
+        "en_US": "OpenAI"
+      },
+      "description": {
+        "zh_Hans": "OpenAI 当前的语言、嵌入、内容审核与音频模型。",
+        "en_US": "Current language, embedding, moderation, and audio models from OpenAI."
+      },
+      "icon_small": {
+        "zh_Hans": "/console/api/workspaces/6801a5c9-569d-4200-8d3c-d9c16859e70c/model-providers/langgenius/openai/openai/icon_small/zh_Hans",
+        "en_US": "/console/api/workspaces/6801a5c9-569d-4200-8d3c-d9c16859e70c/model-providers/langgenius/openai/openai/icon_small/en_US"
+      },
+      "icon_large": {
+        "zh_Hans": "/console/api/workspaces/6801a5c9-569d-4200-8d3c-d9c16859e70c/model-providers/langgenius/openai/openai/icon_large/zh_Hans",
+        "en_US": "/console/api/workspaces/6801a5c9-569d-4200-8d3c-d9c16859e70c/model-providers/langgenius/openai/openai/icon_large/en_US"
+      },
+      "background": "#E5E7EB",
+      "help": {
+        "title": {
+          "zh_Hans": "从 OpenAI 获取 API Key",
+          "en_US": "Get your API Key from OpenAI"
+        },
+        "url": {
+          "zh_Hans": "https://platform.openai.com/account/api-keys",
+          "en_US": "https://platform.openai.com/account/api-keys"
+        }
+      },
+      "supported_model_types": [
+        "llm",
+        "text-embedding",
+        "speech2text",
+        "moderation",
+        "tts"
+      ],
+      "configurate_methods": [
+        "predefined-model",
+        "customizable-model"
+      ],
+      "provider_credential_schema": {
+        "credential_form_schemas": [
+          {
+            "variable": "openai_api_key",
+            "label": {
+              "zh_Hans": "API Key",
+              "en_US": "API Key"
+            },
+            "type": "secret-input",
+            "required": true,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的 API Key",
+              "en_US": "Enter your API Key"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "openai_organization",
+            "label": {
+              "zh_Hans": "组织 ID",
+              "en_US": "Organization"
+            },
+            "type": "text-input",
+            "required": false,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的组织 ID",
+              "en_US": "Enter your Organization ID"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "openai_api_base",
+            "label": {
+              "zh_Hans": "API Base URL",
+              "en_US": "API Base URL"
+            },
+            "type": "text-input",
+            "required": false,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的 API Base URL, 如：https://api.openai.com",
+              "en_US": "Enter your API Base URL, e.g. https://api.openai.com"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "validate_model",
+            "label": {
+              "zh_Hans": "验证模型",
+              "en_US": "Validate Model"
+            },
+            "type": "text-input",
+            "required": false,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "用于验证凭据的模型名称，如：gpt-4o-mini",
+              "en_US": "Model name used to validate credentials, e.g. gpt-4o-mini"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "api_protocol",
+            "label": {
+              "zh_Hans": "API 协议",
+              "en_US": "API Protocol"
+            },
+            "type": "select",
+            "required": false,
+            "default": "responses",
+            "options": [
+              {
+                "label": {
+                  "zh_Hans": "Responses API",
+                  "en_US": "Responses API"
+                },
+                "value": "responses",
+                "show_on": []
+              },
+              {
+                "label": {
+                  "zh_Hans": "Chat Completions",
+                  "en_US": "Chat Completions"
+                },
+                "value": "chat",
+                "show_on": []
+              }
+            ],
+            "placeholder": null,
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "enable_request_metadata",
+            "label": {
+              "zh_Hans": "启用请求元数据（可选）",
+              "en_US": "Enable request metadata (optional)"
+            },
+            "type": "select",
+            "required": false,
+            "default": "disabled",
+            "options": [
+              {
+                "label": {
+                  "zh_Hans": "已启用",
+                  "en_US": "Enabled"
+                },
+                "value": "enabled",
+                "show_on": []
+              },
+              {
+                "label": {
+                  "zh_Hans": "已禁用",
+                  "en_US": "Disabled"
+                },
+                "value": "disabled",
+                "show_on": []
+              }
+            ],
+            "placeholder": null,
+            "max_length": 0,
+            "show_on": []
+          }
+        ]
+      },
+      "model_credential_schema": {
+        "model": {
+          "label": {
+            "zh_Hans": "模型名称",
+            "en_US": "Model Name"
+          },
+          "placeholder": {
+            "zh_Hans": "输入模型名称",
+            "en_US": "Enter your model name"
+          }
+        },
+        "credential_form_schemas": [
+          {
+            "variable": "openai_api_key",
+            "label": {
+              "zh_Hans": "API Key",
+              "en_US": "API Key"
+            },
+            "type": "secret-input",
+            "required": true,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的 API Key",
+              "en_US": "Enter your API Key"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "openai_organization",
+            "label": {
+              "zh_Hans": "组织 ID",
+              "en_US": "Organization"
+            },
+            "type": "text-input",
+            "required": false,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的组织 ID",
+              "en_US": "Enter your Organization ID"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "openai_api_base",
+            "label": {
+              "zh_Hans": "API Base URL",
+              "en_US": "API Base URL"
+            },
+            "type": "text-input",
+            "required": false,
+            "default": null,
+            "options": [],
+            "placeholder": {
+              "zh_Hans": "在此输入您的 API Base URL",
+              "en_US": "Enter your API Base URL"
+            },
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "api_protocol",
+            "label": {
+              "zh_Hans": "API 协议",
+              "en_US": "API Protocol"
+            },
+            "type": "select",
+            "required": false,
+            "default": "responses",
+            "options": [
+              {
+                "label": {
+                  "zh_Hans": "Responses API",
+                  "en_US": "Responses API"
+                },
+                "value": "responses",
+                "show_on": []
+              },
+              {
+                "label": {
+                  "zh_Hans": "Chat Completions",
+                  "en_US": "Chat Completions"
+                },
+                "value": "chat",
+                "show_on": []
+              }
+            ],
+            "placeholder": null,
+            "max_length": 0,
+            "show_on": []
+          },
+          {
+            "variable": "enable_request_metadata",
+            "label": {
+              "zh_Hans": "启用请求元数据（可选）",
+              "en_US": "Enable request metadata (optional)"
+            },
+            "type": "select",
+            "required": false,
+            "default": "disabled",
+            "options": [
+              {
+                "label": {
+                  "zh_Hans": "已启用",
+                  "en_US": "Enabled"
+                },
+                "value": "enabled",
+                "show_on": []
+              },
+              {
+                "label": {
+                  "zh_Hans": "已禁用",
+                  "en_US": "Disabled"
+                },
+                "value": "disabled",
+                "show_on": []
+              }
+            ],
+            "placeholder": null,
+            "max_length": 0,
+            "show_on": []
+          }
+        ]
+      },
+      "preferred_provider_type": "custom",
+      "custom_configuration": {
+        "status": "active",
+        "current_credential_id": "01a17eb3-e6da-7d00-bdeb-ed7731182a52",
+        "current_credential_name": "API KEY 1",
+        "available_credentials": [
+          {
+            "credential_id": "01a17eb3-e6da-7d00-bdeb-ed7731182a52",
+            "credential_name": "API KEY 1"
+          }
+        ],
+        "custom_models": [],
+        "can_added_models": []
+      },
+      "system_configuration": {
+        "enabled": false,
+        "current_quota_type": null,
+        "quota_configurations": []
+      }
+    }
+  ]
+}

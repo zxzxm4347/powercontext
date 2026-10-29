@@ -1,0 +1,6 @@
+platform: Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39
+python: 3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]
+powercontext_server: http://127.0.0.1:8000 (BuiltinRuntime + OceanBase seekdb)
+seekdb_version: 5.7.25-OceanBase seekdb-v1.3.0.0
+dify_dsl_version: 0.4.0 (Dify 1.9.2 advanced-chat, 12 nodes, 11 edges)
+validation: OK: 0 errors, 0 warning(s)

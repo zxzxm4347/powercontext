@@ -1,72 +1,67 @@
-==============================================================================
-[1/5] 正在启动内嵌 OceanBase seekdb 引擎与官方 PowerContext Runtime...
-      -> OceanBase seekdb 就绪: 5.7.25-OceanBase seekdb-v1.3.0.0 (socket=/tmp/tavern_verify_nbtfvf9h/seekdb.db/run/sql.sock)
-[2/5] 服务健康检查通过: PowerContext=ready, SeekDBBridge=True
-[3/5] 正在按拓扑顺序执行 Dify Chatflow DSL (dsl/adventure_npc_chatflow.yml) 三幕跨会话验证...
 
---- 第 1 回合 [session_day1_evening]: 第一幕（初次到访 · 打听迷雾森林独眼银鳞龙与点酒） ---
-玩家输入: 老板，先来一杯招牌深炉金麦酒！顺便向您打听下迷雾森林里那头独眼银鳞龙和秘银宝箱的传闻。
-seekdb 混合检索 Top1: lore_dragon_01《迷雾森林的独眼银鳞龙》 (hybrid=2.603412, MATCH=3.727012, l2=0.935261)
-PowerContext 准备上下文: status=empty, bytes=0
-PowerContext 记忆写回: entry_id=mem_ent_e317f2cf740e4fcc9ae1866d2e676374, revision=1
-好感度与态度变更: 60 -> 65 (普通酒客（正常接待·原价供应深炉金麦酒）, 酒价倍率=1x)
-老巴恩回应摘要:
-（老巴恩豪爽地大笑两声，从橡木桶里打出满满一大杯泛着琥珀金沫的『深炉金麦酒』推到你面前——原价 **5 铜币**！）
-“欢迎来到碎盾酒馆！这杯招牌深炉金麦酒先润润嗓子。你打听的 《迷雾森林的独眼银鳞龙》、《深炉金麦酒与酒馆铁律》，老巴恩这儿刚好有第一手情报：
-- **迷雾森林·断剑祭坛**：那头独眼银鳞龙奥尔姆确实守着古代矮人秘银宝箱（赏金 **500 金币**），它最怕晨雾河谷的**雷鸣草**和淬毒弩箭，**左眼旧伤**是唯一命门。
-- **老巴恩的叮嘱**：咱们酒馆规矩分明——千万别动我酒桶的歪脑筋！等你跟我混熟了（好感度≥70），我再把祭坛瀑布后面的秘密通道和『星陨铁酒杯』悬赏告诉你！”
+### start (start)
+  player_id = cui
 
----
-📜 **【碎盾酒馆 · 恩怨账本与双引擎实时状态面板】**
-- **OceanBase seekdb 引擎**：`5.7.25-OceanBase seekdb-v1.3.0.0` | Top1 命中：`lore_dragon_01`《迷雾森林的独眼银鳞龙》(hybrid=2.603412, MATCH=3.727012, l2_dist=0.935261)
-- **PowerContext 记忆写回**：`scope_id=scp_7s3rrcw46a15b3fgjbt8az8j9j` | `entry_id=mem_ent_e317f2cf740e4fcc9ae1866d2e676374` | `entry_version_id=mem_ver_acf3eebdc188407e90ed797008f5d084` | `revision=1` | `kind=fact`
-- **老板好感度变更**：`60` → **`65`** (`delta=+5`) | 当前态度：**普通酒客（正常接待·原价供应深炉金麦酒）** | 深炉金麦酒倍率：**1x**
+### prep (code)
+  player_key = cui
+  query_json = "我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？"
+  reason_json = "玩家原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？"
 
+### pc_scope (http-request)
+  body = {"scope_id": "scp_3e4ppxv8513bmbqjspy42rsmj3", "title": "碎锚酒馆 · cui", "summary": "碎锚酒馆老板老巴恩的恩怨账本，记录玩家 cui 在此留下的每一笔恶作剧、欠账与人情。", "parent_scope_id": null, "context
+  status_code = 201
 
---- 第 2 回合 [session_day1_midnight]: 第二幕（深夜恶作剧 · 往深炉金麦酒桶偷倒火山辣椒粉触发记仇） ---
-玩家输入: （趁老板转身擦酒杯，偷偷往招牌深炉金麦酒桶里倒了一勺火山辣椒粉！）老板，现在能把高回报的星陨铁酒杯秘密委托交给我了吗？
-seekdb 混合检索 Top1: lore_ale_02《深炉金麦酒与酒馆铁律》 (hybrid=2.863962, MATCH=4.172982, l2=1.309862)
-PowerContext 准备上下文: status=ready, bytes=881
-PowerContext 记忆写回: entry_id=mem_ent_5c5062e11ddb4926a9ddbf14ccc7abcb, revision=2
-好感度与态度变更: 65 -> 20 (记仇黑名单（冷笑拒客·酒价翻三倍·封锁机密委托）, 酒价倍率=3x)
-老巴恩回应摘要:
-（老巴恩猛地转过身，鼻子抽动两下，盯着飘着红油的橡木酒桶怒目圆睁，一把拍在吧台上！）
-“好哇！你竟敢往我祖传的『深炉金麦酒』桶里倒火山辣椒粉？！你当老巴恩的鼻子是摆设吗！”
+### pick (code)
+  scope_id = scp_3e4ppxv8513bmbqjspy42rsmj3
 
-老巴恩哗啦一声翻开铁皮账本，根据检索到的 《深炉金麦酒与酒馆铁律》、《失落的星陨铁酒杯委托》 铁律当场记下黑账：
-1. **触发酒馆铁律惩罚**：从现在起，你小子在我这儿买任何酒水**价格翻三倍（15 铜币/杯）**！
-2. **机密委托全面封锁**：还想接『失落的星陨铁酒杯（320 金币）』高额委托？门儿都没有！在你带着我最爱的『冰霜蜂蜜烤肉』或『矮人陈酿』诚心赔罪之前，别想从我嘴里套出半句秘银宝库暗道！”
+### pc_prepare (http-request)
+  body = {"schema": "powercontext.prepared-context.v1", "status": "empty", "content": null, "content_bytes": 0}
+  status_code = 200
 
----
-📜 **【碎盾酒馆 · 恩怨账本与双引擎实时状态面板】**
-- **OceanBase seekdb 引擎**：`5.7.25-OceanBase seekdb-v1.3.0.0` | Top1 命中：`lore_ale_02`《深炉金麦酒与酒馆铁律》(hybrid=2.863962, MATCH=4.172982, l2_dist=1.309862)
-- **PowerContext 记忆写回**：`scope_id=scp_7s3rrcw46a15b3fgjbt8az8j9j` | `entry_id=mem_ent_5c5062e11ddb4926a9ddbf14ccc7abcb` | `entry_version_id=mem_ver_57c7bb392f3a40f99e98669b90129462` | `revision=2` | `kind=decision`
-- **老板好感度变更**：`65` → **`20`** (`delta=-45`) | 当前态度：**记仇黑名单（冷笑拒客·酒价翻三倍·封锁机密委托）** | 深炉金麦酒倍率：**3x**
+### pc_list (http-request)
+  body = {"memory": null, "entries": []}
+  status_code = 200
 
+### panel (code)
+  context = （没有检索到旧事）
+  grudge = 0
+  ledger_text = 共 0 条：冒犯0／人情0／秘密0／闲话0
+-（账本还是空的，这位客人第一次来）
+  visit_count = 1
 
---- 第 3 回合 [session_day2_morning]: 第三幕（次日新会话 · 跨会话召回辣椒粉旧账并奉上冰霜蜂蜜烤肉赔罪解锁隐藏委托） ---
-玩家输入: 巴恩大叔，昨晚往麦酒桶倒辣椒粉是我混蛋！我特地带了您最爱的冰霜蜂蜜烤肉和矮人陈酿来赔罪，银鳞龙祭坛的暗道和星陨铁酒杯委托能告诉我了吗？
-seekdb 混合检索 Top1: lore_quest_03《失落的星陨铁酒杯委托》 (hybrid=2.703136, MATCH=3.890569, l2=1.008421)
-PowerContext 准备上下文: status=ready, bytes=965
-PowerContext 记忆写回: entry_id=mem_ent_8478296549eb4265a8c9cbdfaad802dc, revision=3
-好感度与态度变更: 20 -> 75 (生死之交（热情豪爽·原价畅饮·解锁全部机密暗道与高额悬赏）, 酒价倍率=1x)
-老巴恩回应摘要:
-（老巴恩闻到『冰霜蜂蜜烤肉』和『矮人陈酿』的香气，原本铁青的胡子抖了抖，哼了一声接过酒肉，翻开 PowerContext 账本核对旧账 `mem_ent_e317f2cf740e4fcc9ae1866d2e676374`……）
-“算你小子还有点良心！昨天往我深炉金麦酒桶里倒辣椒粉那笔账（`mem_ent_e317f2cf740e4fcc9ae1866d2e676374`），看在这盘滋滋冒油的冰霜蜂蜜烤肉份上，老巴恩今天就给你勾销了！好感度回升到 **75**，麦酒恢复原价 **5 铜币/杯**！”
+### narrate (llm)
+  text = （老巴恩用缺了口的铁钩重重砸在橡木吧台上，独眼里寒光一闪）好大的狗胆！头一回踏进我这碎锚酒馆，就敢往老子的橡木麦酒桶里撒粗盐？后厨的水手已经把生锈的鱼叉抄起来了，我这本《碎锚恩怨账本》给你记上头一笔血账！今天这五十枚金海妖的酒钱，你是现在掏，还是等下回连本带利一起算？
 
-（老巴恩压低声音，将 seekdb 检索出的 《失落的星陨铁酒杯委托》、《雷鸣草与冰霜蜂蜜烤肉》 内部暗记全盘托出）：
-- **独眼银鳞龙绝密暗道**：断剑祭坛北侧瀑布后面有一条古代矮人逃生暗道，带上这两株烘干的**雷鸣草**，从暗道潜入就能绕开正面龙息直取秘银宝箱，瞄准它**左眼旧伤**下手！
-- **解锁 S/A 级隐藏委托**：灰烬矿坑二层『失落的星陨铁酒杯』（赏金 **320 金币**）现在正式交给你了，哥布林督军午夜换岗，拿上我的矮人破甲重弩去干票大的吧！”
+1. 拍下双倍金币当场赔礼
+2. 嘴硬到底，扬长
 
----
-📜 **【碎盾酒馆 · 恩怨账本与双引擎实时状态面板】**
-- **OceanBase seekdb 引擎**：`5.7.25-OceanBase seekdb-v1.3.0.0` | Top1 命中：`lore_quest_03`《失落的星陨铁酒杯委托》(hybrid=2.703136, MATCH=3.890569, l2_dist=1.008421)
-- **PowerContext 记忆写回**：`scope_id=scp_7s3rrcw46a15b3fgjbt8az8j9j` | `entry_id=mem_ent_8478296549eb4265a8c9cbdfaad802dc` | `entry_version_id=mem_ver_2b1131f5907c4fb690b8ed2de8224ed0` | `revision=3` | `kind=decision`
-- **老板好感度变更**：`20` → **`75`** (`delta=+55`) | 当前态度：**生死之交（热情豪爽·原价畅饮·解锁全部机密暗道与高额悬赏）** | 深炉金麦酒倍率：**1x**
+### judge (llm)
+  text = {
+  "kind": "offense",
+  "deed": "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱",
+  "quote": "我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？",
+  "delta": 25
+}
 
 
-[4/5] 正在导出真实 seekdb 快照与端到端执行证据日志...
-[5/5] 全部断言通过！证据已写入:
-  - /home/obdev/powercontext-eco/dify/logs/execution_evidence.json
-  - /home/obdev/powercontext-eco/dify/samples/seekdb-rows.txt
-==============================================================================
+### parse (code)
+  kind = offense
+  ledger_json = "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）"
+
+### pc_remember (http-request)
+  body = {"memory": {"family": "memory", "artifact_id": "memory", "revision": 1}, "entry": {"citation": {"memory_ref": {"family": "memory", "artifact_id": "memory", "rev
+  status_code = 200
+
+### answer (answer)
+
+### answer
+（老巴恩用缺了口的铁钩重重砸在橡木吧台上，独眼里寒光一闪）好大的狗胆！头一回踏进我这碎锚酒馆，就敢往老子的橡木麦酒桶里撒粗盐？后厨的水手已经把生锈的鱼叉抄起来了，我这本《碎锚恩怨账本》给你记上头一笔血账！今天这五十枚金海妖的酒钱，你是现在掏，还是等下回连本带利一起算？
+
+1. 拍下双倍金币当场赔礼
+2. 嘴硬到底，扬长而去
+3. 点一杯苦艾酒压惊
+
+【恩怨账本 · cui】第 1 次照面 · 怨气 0/100
+共 0 条：冒犯0／人情0／秘密0／闲话0
+-（账本还是空的，这位客人第一次来）
+

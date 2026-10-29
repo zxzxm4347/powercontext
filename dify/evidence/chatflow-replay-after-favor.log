@@ -1,0 +1,70 @@
+
+### start (start)
+  player_id = cui
+
+### prep (code)
+  player_key = cui
+  query_json = "老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？"
+  reason_json = "玩家原话：老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？"
+
+### pc_scope (http-request)
+  body = {"scope_id": "scp_3e4ppxv8513bmbqjspy42rsmj3", "title": "碎锚酒馆 · cui", "summary": "碎锚酒馆老板老巴恩的恩怨账本，记录玩家 cui 在此留下的每一笔恶作剧、欠账与人情。", "parent_scope_id": null, "context
+  status_code = 201
+
+### pick (code)
+  scope_id = scp_3e4ppxv8513bmbqjspy42rsmj3
+
+### pc_prepare (http-request)
+  body = {"schema": "powercontext.prepared-context.v1", "status": "empty", "content": null, "content_bytes": 0}
+  status_code = 200
+
+### pc_list (http-request)
+  body = {"memory": {"family": "memory", "artifact_id": "memory", "revision": 3}, "entries": [{"citation": {"memory_ref": {"family": "memory", "artifact_id": "memory", "
+  status_code = 200
+
+### panel (code)
+  context = （没有检索到旧事）
+  grudge = 32
+  ledger_text = 共 3 条：冒犯2／人情1／秘密0／闲话0
+- [冒犯] 冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）
+- [人情] 冒险者主动拎来三坛陈年朗姆酒向老巴恩赔礼道歉，并补齐了此前毁坏麦酒桶的金币（原话：上次往麦酒桶倒粗盐
+  visit_count = 4
+
+### narrate (llm)
+  text = （老巴恩哼了一声，合上恩怨账本，往你面前推了一碟海盐烤鱼干，当前怨气 32/100）之前你往橡木麦酒桶撒粗盐那笔烂账，看在你后来拎来三坛陈年朗姆酒赔罪的份上，老子暂且不多计较。这碎锚酒馆在码头立了四十二年，什么海盗怪客没见过？想知道暴风海的秘密，先把杯里的酒干了！
+
+1. 追问黑帆船长的沉船海图
+2. 再续一壶热朗姆酒
+
+### judge (llm)
+  text = {
+  "kind": "neutral",
+  "deed": "冒险者坐在吧台旁向老巴恩打听碎锚酒馆开了多少年以及暴风夜黑帆船长的传闻",
+  "quote": "老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？",
+  "delta": 0
+}
+
+
+### parse (code)
+  kind = neutral
+  ledger_json = "冒险者坐在吧台旁向老巴恩打听碎锚酒馆开了多少年以及暴风夜黑帆船长的传闻（原话：老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？）"
+
+### pc_remember (http-request)
+  body = {"memory": {"family": "memory", "artifact_id": "memory", "revision": 4}, "entry": {"citation": {"memory_ref": {"family": "memory", "artifact_id": "memory", "rev
+  status_code = 200
+
+### answer (answer)
+
+### answer
+（老巴恩哼了一声，合上恩怨账本，往你面前推了一碟海盐烤鱼干，当前怨气 32/100）之前你往橡木麦酒桶撒粗盐那笔烂账，看在你后来拎来三坛陈年朗姆酒赔罪的份上，老子暂且不多计较。这碎锚酒馆在码头立了四十二年，什么海盗怪客没见过？想知道暴风海的秘密，先把杯里的酒干了！
+
+1. 追问黑帆船长的沉船海图
+2. 再续一壶热朗姆酒
+3. 查看自己在酒馆的恩怨账目
+
+【恩怨账本 · cui】第 4 次照面 · 怨气 32/100
+共 3 条：冒犯2／人情1／秘密0／闲话0
+- [冒犯] 冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）
+- [人情] 冒险者主动拎来三坛陈年朗姆酒向老巴恩赔礼道歉，并补齐了此前毁坏麦酒桶的金币（原话：上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。）
+- [冒犯] 冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我又来了，上次那桶加了粗盐的麦酒味道如何？）
+

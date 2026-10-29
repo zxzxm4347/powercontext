@@ -1,0 +1,43 @@
+{
+  "id": "9a41e8c2-3b7d-4e91-9f24-c8127a904e11",
+  "name": "碎锚酒馆 · 记仇老板老巴恩",
+  "description": "碎锚酒馆里，独眼老板老巴恩会把你做过的每件恶作剧、欠账与恩情记进《碎锚恩怨账本》（PowerContext + seekdb 持久化）；换个新会话再来，只要报同一个名号，他照样一笔一笔翻旧账。",
+  "mode": "advanced-chat",
+  "icon_type": "emoji",
+  "icon": "🍺",
+  "icon_background": "#FFEAD5",
+  "icon_url": null,
+  "enable_site": true,
+  "enable_api": true,
+  "model_config": null,
+  "workflow": {
+    "id": "4f88c219-91a4-47b2-8c63-19d04b772e55",
+    "created_by": "afc01d0a-bcbb-4702-b8ad-314f59588eed",
+    "created_at": 1761724800,
+    "updated_by": null,
+    "updated_at": 1761724805
+  },
+  "api_base_url": "http://127.0.0.1:5001/v1",
+  "use_icon_as_answer_icon": false,
+  "max_active_requests": null,
+  "created_by": "afc01d0a-bcbb-4702-b8ad-314f59588eed",
+  "created_at": 1761724800,
+  "updated_by": "afc01d0a-bcbb-4702-b8ad-314f59588eed",
+  "updated_at": 1761724805,
+  "deleted_tools": [],
+  "access_mode": null,
+  "tags": [],
+  "site": {
+    "access_token": "REDACTED-LOCAL-TEST",
+    "code": "REDACTED-LOCAL-TEST",
+    "title": "碎锚酒馆 · 记仇老板老巴恩",
+    "icon_type": "emoji",
+    "icon": "🍺",
+    "icon_background": "#FFEAD5",
+    "icon_url": null,
+    "description": "碎锚酒馆里，独眼老板老巴恩会把你做过的每件恶作剧、欠账与恩情记进《碎锚恩怨账本》（PowerContext + seekdb 持久化）；换个新会话再来，只要报同一个名号，他照样一笔一笔翻旧账。",
+    "default_language": "zh-Hans",
+    "show_workflow_steps": true,
+    "use_icon_as_answer_icon": false
+  }
+}

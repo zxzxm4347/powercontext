@@ -1,13 +1,4 @@
-=== Validating dify/dsl/adventure_npc_chatflow.yml ===
-Nodes count: 17 | Edges count: 16 | Types: {'start': 1, 'code': 6, 'http-request': 7, 'llm': 2, 'answer': 1}
-Topological connectivity verified: all 17 nodes reachable from 'start' to 'answer'.
-Verified HTTP endpoints: ['/v1/scopes', '/v1/sources/content', '/v1/context/prepare', '/v1/memory/entries/list', '/v1/memory/remember', '/api/v1/seekdb/hybrid_search', '/api/v1/seekdb/record_grudge']
-All Python3 code nodes compiled successfully.
-Security check passed: no hardcoded secrets.
-=== Validating dify/workflow.yml ===
-Nodes count: 17 | Edges count: 16 | Types: {'start': 1, 'code': 6, 'http-request': 7, 'llm': 2, 'answer': 1}
-Topological connectivity verified: all 17 nodes reachable from 'start' to 'answer'.
-Verified HTTP endpoints: ['/v1/scopes', '/v1/sources/content', '/v1/context/prepare', '/v1/memory/entries/list', '/v1/memory/remember', '/api/v1/seekdb/hybrid_search', '/api/v1/seekdb/record_grudge']
-All Python3 code nodes compiled successfully.
-Security check passed: no hardcoded secrets.
-ALL DSL VALIDATION CHECKS PASSED.
+DSL: /home/obdev/powercontext-eco/dify/dsl/adventure_npc_chatflow.yml
+nodes=12 edges=11 type_counts={'start': 1, 'code': 4, 'http-request': 4, 'llm': 2, 'answer': 1}
+
+OK: 0 errors, 0 warning(s)

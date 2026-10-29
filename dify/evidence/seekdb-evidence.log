@@ -1,0 +1,17 @@
+① OceanBase seekdb 混合检索与持久化核验
+   engine  : pylibseekdb
+   version : 5.7.25-OceanBase seekdb-v1.3.0.0
+   · [lore_ale_02] category=tavern_rule gold=180 vec_l2=0.0 ft_bm25=4.321 | 深炉金麦酒与酒馆铁律
+   · [lore_herb_04] category=item gold=120 vec_l2=0.7045 ft_bm25=0.1296 | 雷鸣草与冰霜蜂蜜烤肉
+   · [lore_crypt_05] category=rumor gold=260 vec_l2=1.272 ft_bm25=0.0 | 旧王都地下酒窖的幽灵守卫
+   · [lore_quest_03] category=quest gold=320 vec_l2=1.3993 ft_bm25=0.0 | 失落的星陨铁酒杯委托
+   · [lore_dragon_01] category=monster gold=500 vec_l2=1.9724 ft_bm25=0.0 | 迷雾森林的独眼银鳞龙
+
+② PowerContext Server 能力与状态
+   {"schema": "powercontext.capabilities.v1", "storage_backend": "seekdb", "unix_socket": "/home/obdev/powercontext-eco/dify/.data/pc_seekdb/run/sql.sock", "features": ["scopes", "sources", "atomic-memory", "context-prepare", "memory-search"]}
+
+③ PowerContext 账本检索核对
+   scope_id = scp_14p0kjzbj020he34a5j3ane769
+   /v1/memory/search 命中 2 条：
+   · [favor] score=0.01639344262295082 | 冒险者主动拎来三坛陈年朗姆酒向老巴恩赔礼道歉，并补齐了此前毁坏麦酒桶的金币（原话：上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。）
+   · [offense] score=0.016129032258064516 | 冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）

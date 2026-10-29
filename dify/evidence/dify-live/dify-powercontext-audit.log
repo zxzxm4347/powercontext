@@ -1,0 +1,96 @@
+## scope
+{
+  "scope_id": "scp_4sbq73z7yf9jmxkmhatyg9v26h",
+  "title": "碎锚酒馆 · docker-final",
+  "summary": "碎锚酒馆老板老巴恩的恩怨账本，记录玩家 docker-final 在此留下的每一笔恶作剧、欠账与人情。",
+  "parent_scope_id": null,
+  "context_references": [],
+  "external_references": [],
+  "version": 1
+}
+## entries (2)
+{
+  "memory": {
+    "family": "memory",
+    "artifact_id": "memory",
+    "revision": 2
+  },
+  "entries": [
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 2
+        },
+        "entry_id": "mem_ent_b32d076c863b4e5586e0beac935c20e3",
+        "entry_version_id": "mem_ver_7f726c575e2d4b90b17bb7998b808dab"
+      },
+      "version": 1,
+      "kind": "offense",
+      "text": "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    },
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 2
+        },
+        "entry_id": "mem_ent_e64081cffb5b4773a1556095c2a3f66c",
+        "entry_version_id": "mem_ver_ea58c1472eb44447878e50db1e2dcd91"
+      },
+      "version": 1,
+      "kind": "offense",
+      "text": "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我又来了，上次那桶加了粗盐的麦酒味道如何？）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    }
+  ]
+}
+## changes
+{
+  "memory": {
+    "family": "memory",
+    "artifact_id": "memory",
+    "revision": 2
+  },
+  "revisions": [
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 1
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_b32d076c863b4e5586e0beac935c20e3",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_7f726c575e2d4b90b17bb7998b808dab",
+          "reason": "玩家原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？"
+        }
+      ]
+    },
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 2
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_e64081cffb5b4773a1556095c2a3f66c",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_ea58c1472eb44447878e50db1e2dcd91",
+          "reason": "玩家原话：我又来了，上次那桶加了粗盐的麦酒味道如何？"
+        }
+      ]
+    }
+  ]
+}

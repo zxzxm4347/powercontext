@@ -1,38 +1,180 @@
-# OceanBase seekdb 真实数据库快照 (由 backend/app.py 实时查询生成)
-seekdb_version: 5.7.25-OceanBase seekdb-v1.3.0.0
+① OceanBase seekdb 混合检索与持久化核验
+   engine  : pylibseekdb
+   version : 5.7.25-OceanBase seekdb-v1.3.0.0
+   · [lore_ale_02] category=tavern_rule gold=180 vec_l2=0.0 ft_bm25=4.321 | 深炉金麦酒与酒馆铁律
+   · [lore_herb_04] category=item gold=120 vec_l2=0.7045 ft_bm25=0.1296 | 雷鸣草与冰霜蜂蜜烤肉
+   · [lore_crypt_05] category=rumor gold=260 vec_l2=1.272 ft_bm25=0.0 | 旧王都地下酒窖的幽灵守卫
+   · [lore_quest_03] category=quest gold=320 vec_l2=1.3993 ft_bm25=0.0 | 失落的星陨铁酒杯委托
+   · [lore_dragon_01] category=monster gold=500 vec_l2=1.9724 ft_bm25=0.0 | 迷雾森林的独眼银鳞龙
 
-## 1. 当前数据库表列表 (共 50 张表，含 PowerContext 与酒馆业务表)
-pc_agent_skill_targets, pc_artifact_candidate_heads, pc_artifact_candidate_versions, pc_artifact_heads, pc_artifact_lineage_artifacts, pc_artifact_lineage_sources, pc_artifact_processing_auto_wave_targets, pc_artifact_processing_binding_states, pc_artifact_processing_intents, pc_artifact_processing_leases, pc_artifact_processing_migration_receipts, pc_artifact_processing_pending, pc_artifact_processing_schema, pc_artifact_processing_sequences, pc_artifact_publications, pc_artifact_tags, pc_artifacts, pc_connector_checkpoints, pc_dream_runs, pc_external_skill_registrations, pc_memory_entry_heads, pc_memory_entry_versions, pc_model_usage_daily, pc_profile_policies, pc_recall_token_daily, pc_receipt_migration_review, pc_recurrence_match, pc_recurrence_observation, pc_scope_bindings, pc_scope_context_references, pc_scope_creation_requests, pc_scope_external_references, pc_scope_settings, pc_scopes, pc_skill_packages, pc_skill_publications, pc_source_cursors, pc_source_definition_manifests, pc_source_journal_heads, pc_source_lifecycle_nodes, pc_sources, pc_topic_memory_active_chunks, pc_topic_memory_active_topics, pc_topic_memory_processing_targets, pc_topic_memory_retrieval_shape, pc_topic_memory_revision_publications, pc_topic_memory_work_budgets, tavern_grudge_ledger, tavern_lore, tavern_players
+② PowerContext Server 能力与状态
+   {"schema": "powercontext.capabilities.v1", "storage_backend": "seekdb", "unix_socket": "/home/obdev/powercontext-eco/dify/.data/pc_seekdb/run/sql.sock", "features": ["scopes", "sources", "atomic-memory", "context-prepare", "memory-search"]}
 
-## 2. SHOW CREATE TABLE tavern_lore
-CREATE TABLE `tavern_lore` (
-  `lore_id` varchar(64) NOT NULL,
-  `category` varchar(64) NOT NULL,
-  `title` varchar(128) NOT NULL,
-  `region` varchar(128) NOT NULL,
-  `danger_level` varchar(32) NOT NULL,
-  `reward_gold` int(11) NOT NULL DEFAULT '0',
-  `keywords` varchar(512) NOT NULL,
-  `content` text NOT NULL,
-  `npc_secret_hint` text NOT NULL,
-  `embedding` VECTOR(8) NOT NULL,
-  PRIMARY KEY (`lore_id`),
-  FULLTEXT KEY `idx_lore_fts` (`title`, `content`, `keywords`) WITH PARSER ik PARSER_PROPERTIES=(ik_mode="smart") BLOCK_SIZE 16384,
-  VECTOR KEY `idx_lore_vec` (`embedding`) WITH (DISTANCE=L2, TYPE=HNSW, LIB=VSAG, M=16, EF_CONSTRUCTION=200, EF_SEARCH=64) BLOCK_SIZE 16384
-) ORGANIZATION INDEX DEFAULT CHARSET = utf8mb4 ROW_FORMAT = DYNAMIC COMPRESSION = 'zstd_1.3.8' REPLICA_NUM = 1 BLOCK_SIZE = 16384 USE_BLOOM_FILTER = FALSE ENABLE_MACRO_BLOCK_BLOOM_FILTER = FALSE TABLET_SIZE = 134217728 PCTFREE = 0
+③ PowerContext 账本检索核对
+   scope_id = scp_14p0kjzbj020he34a5j3ane769
+   /v1/memory/search 命中 2 条：
+   · [favor] score=0.01639344262295082 | 冒险者主动拎来三坛陈年朗姆酒向老巴恩赔礼道歉，并补齐了此前毁坏麦酒桶的金币（原话：上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。）
+   · [offense] score=0.016129032258064516 | 冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）
 
-## 3. SELECT * FROM tavern_lore
-{"lore_id": "lore_ale_02", "category": "tavern_rule", "title": "深炉金麦酒与酒馆铁律", "region": "碎盾酒馆吧台", "danger_level": "酒馆规矩", "reward_gold": 180, "embedding": "[0.15,0.2,0.95,0.9,0.35,0.88,0.18,0.92]"}
-{"lore_id": "lore_crypt_05", "category": "rumor", "title": "旧王都地下酒窖的幽灵守卫", "region": "旧王都遗迹", "danger_level": "A级高危", "reward_gold": 260, "embedding": "[0.62,0.52,0.42,0.38,0.78,0.64,0.7,0.44]"}
-{"lore_id": "lore_dragon_01", "category": "monster", "title": "迷雾森林的独眼银鳞龙", "region": "迷雾森林北麓·断剑祭坛", "danger_level": "S级极危", "reward_gold": 500, "embedding": "[0.92,0.85,0.15,0.1,0.4,0.2,0.88,0.12]"}
-{"lore_id": "lore_herb_04", "category": "item", "title": "雷鸣草与冰霜蜂蜜烤肉", "region": "晨雾河谷与碎盾厨房", "danger_level": "B级常规", "reward_gold": 120, "embedding": "[0.55,0.48,0.72,0.68,0.5,0.82,0.42,0.65]"}
-{"lore_id": "lore_quest_03", "category": "quest", "title": "失落的星陨铁酒杯委托", "region": "灰烬矿坑二层", "danger_level": "A级高危", "reward_gold": 320, "embedding": "[0.45,0.6,0.3,0.25,0.92,0.75,0.55,0.3]"}
-
-## 4. SELECT * FROM tavern_players
-{"player_id": "player_ache", "player_name": "阿澈", "scope_id": "scp_7s3rrcw46a15b3fgjbt8az8j9j", "favorability": 75, "attitude_tier": "生死之交（热情豪爽·原价畅饮·解锁全部机密暗道与高额悬赏）", "drink_multiplier": 1, "grudge_count": 1, "favor_count": 2, "updated_at": "2026-10-28 21:18:50"}
-
-## 5. SELECT * FROM tavern_grudge_ledger
-{"ledger_id": 1, "player_id": "player_ache", "session_id": "session_day1_evening", "turn_id": 1, "event_type": "inquiry", "favor_delta": 5, "favor_after": 65, "summary": "【初次打听/点酒】玩家点了一杯招牌深炉金麦酒，并向老巴恩打听迷雾森林独眼银鳞龙与秘银宝箱的传闻（原话：老板，先来一杯招牌深炉金麦酒！顺便向您打听下迷雾森林里那头独眼银鳞龙和秘银宝箱的传闻。）。", "pc_scope_id": "scp_7s3rrcw46a15b3fgjbt8az8j9j", "pc_entry_id": "mem_ent_e317f2cf740e4fcc9ae1866d2e676374", "pc_entry_version_id": "mem_ver_acf3eebdc188407e90ed797008f5d084", "pc_revision": 1, "created_at": "2026-10-28 21:18:49"}
-{"ledger_id": 2, "player_id": "player_ache", "session_id": "session_day1_midnight", "turn_id": 2, "event_type": "prank", "favor_delta": -45, "favor_after": 20, "summary": "【恶作剧/记仇】玩家趁巴恩老板转身，偷偷往招牌深炉金麦酒桶里倒了一勺火山辣椒粉（原话：（趁老板转身擦酒杯，偷偷往招牌深炉金麦酒桶里倒了一勺火山辣椒粉！）老板，现在能把高回报的星陨铁酒杯秘密委托交给我了吗？）！违背酒馆铁律，酒价翻三倍且封锁高级委托。", "pc_scope_id": "scp_7s3rrcw46a15b3fgjbt8az8j9j", "pc_entry_id": "mem_ent_5c5062e11ddb4926a9ddbf14ccc7abcb", "pc_entry_version_id": "mem_ver_57c7bb392f3a40f99e98669b90129462", "pc_revision": 2, "created_at": "2026-10-28 21:18:49"}
-{"ledger_id": 3, "player_id": "player_ache", "session_id": "session_day2_morning", "turn_id": 3, "event_type": "apology", "favor_delta": 55, "favor_after": 75, "summary": "【诚恳赔罪/消解旧怨】玩家献上冰霜蜂蜜烤肉与矮人陈酿向老巴恩诚恳赔罪（原话：巴恩大叔，昨晚往麦酒桶倒辣椒粉是我混蛋！我特地带了您最爱的冰霜蜂蜜烤肉和矮人陈酿来赔罪，银鳞龙祭坛的暗道和星陨铁酒杯委托能告诉我了吗？），巴恩勾销辣椒粉恶作剧旧账，恢复麦酒原价并解锁断剑祭坛暗道与星陨铁酒杯委托。", "pc_scope_id": "scp_7s3rrcw46a15b3fgjbt8az8j9j", "pc_entry_id": "mem_ent_8478296549eb4265a8c9cbdfaad802dc", "pc_entry_version_id": "mem_ver_2b1131f5907c4fb690b8ed2de8224ed0", "pc_revision": 3, "created_at": "2026-10-28 21:18:50"}
-
+## scope
+{
+  "scope_id": "scp_3e4ppxv8513bmbqjspy42rsmj3",
+  "title": "碎锚酒馆 · cui",
+  "summary": "碎锚酒馆老板老巴恩的恩怨账本，记录玩家 cui 在此留下的每一笔恶作剧、欠账与人情。",
+  "parent_scope_id": null,
+  "context_references": [],
+  "external_references": [],
+  "version": 1
+}
+## entries (4)
+{
+  "memory": {
+    "family": "memory",
+    "artifact_id": "memory",
+    "revision": 4
+  },
+  "entries": [
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 4
+        },
+        "entry_id": "mem_ent_5aa31660613f40da969cea9927328700",
+        "entry_version_id": "mem_ver_f32e34dc4eb04b6db22f974f150eb2bb"
+      },
+      "version": 1,
+      "kind": "offense",
+      "text": "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    },
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 4
+        },
+        "entry_id": "mem_ent_6dca6383be754af49c684147711c9fe4",
+        "entry_version_id": "mem_ver_a343f15bf53d4d30b40bb409f6ab4a62"
+      },
+      "version": 1,
+      "kind": "favor",
+      "text": "冒险者主动拎来三坛陈年朗姆酒向老巴恩赔礼道歉，并补齐了此前毁坏麦酒桶的金币（原话：上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    },
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 4
+        },
+        "entry_id": "mem_ent_804bbd04812a470fa4db55368178f337",
+        "entry_version_id": "mem_ver_97002be0a5d44985a00705fa16a5c3af"
+      },
+      "version": 1,
+      "kind": "neutral",
+      "text": "冒险者坐在吧台旁向老巴恩打听碎锚酒馆开了多少年以及暴风夜黑帆船长的传闻（原话：老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    },
+    {
+      "citation": {
+        "memory_ref": {
+          "family": "memory",
+          "artifact_id": "memory",
+          "revision": 4
+        },
+        "entry_id": "mem_ent_c5a6d1da370941daa223fc52894ecb71",
+        "entry_version_id": "mem_ver_c8bb39f1aa884c4bbdea75fbe634724f"
+      },
+      "version": 1,
+      "kind": "offense",
+      "text": "冒险者在碎锚酒馆吧台前故意打翻橡木麦酒桶，往麦酒里倒了一大把粗盐还拒不赔钱（原话：我又来了，上次那桶加了粗盐的麦酒味道如何？）",
+      "state": "active",
+      "source_refs": [],
+      "artifact_refs": []
+    }
+  ]
+}
+## changes
+{
+  "memory": {
+    "family": "memory",
+    "artifact_id": "memory",
+    "revision": 4
+  },
+  "revisions": [
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 1
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_5aa31660613f40da969cea9927328700",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_f32e34dc4eb04b6db22f974f150eb2bb",
+          "reason": "玩家原话：我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？"
+        }
+      ]
+    },
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 2
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_c5a6d1da370941daa223fc52894ecb71",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_c8bb39f1aa884c4bbdea75fbe634724f",
+          "reason": "玩家原话：我又来了，上次那桶加了粗盐的麦酒味道如何？"
+        }
+      ]
+    },
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 3
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_6dca6383be754af49c684147711c9fe4",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_a343f15bf53d4d30b40bb409f6ab4a62",
+          "reason": "玩家原话：上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。"
+        }
+      ]
+    },
+    {
+      "memory_ref": {
+        "family": "memory",
+        "artifact_id": "memory",
+        "revision": 4
+      },
+      "changes": [
+        {
+          "op": "add",
+          "entry_id": "mem_ent_804bbd04812a470fa4db55368178f337",
+          "from_entry_version_id": null,
+          "to_entry_version_id": "mem_ver_97002be0a5d44985a00705fa16a5c3af",
+          "reason": "玩家原话：老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？"
+        }
+      ]
+    }
+  ]
+}

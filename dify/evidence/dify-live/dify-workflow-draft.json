@@ -1,0 +1,947 @@
+{
+  "id": "4f88c219-91a4-47b2-8c63-19d04b772e55",
+  "graph": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 0.7
+    },
+    "edges": [
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "start",
+          "targetType": "code"
+        },
+        "id": "start-source-prep-target",
+        "source": "start",
+        "sourceHandle": "source",
+        "target": "prep",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "code",
+          "targetType": "http-request"
+        },
+        "id": "prep-source-pc_scope-target",
+        "source": "prep",
+        "sourceHandle": "source",
+        "target": "pc_scope",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "http-request",
+          "targetType": "code"
+        },
+        "id": "pc_scope-source-pick-target",
+        "source": "pc_scope",
+        "sourceHandle": "source",
+        "target": "pick",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "code",
+          "targetType": "http-request"
+        },
+        "id": "pick-source-pc_prepare-target",
+        "source": "pick",
+        "sourceHandle": "source",
+        "target": "pc_prepare",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "http-request",
+          "targetType": "http-request"
+        },
+        "id": "pc_prepare-source-pc_list-target",
+        "source": "pc_prepare",
+        "sourceHandle": "source",
+        "target": "pc_list",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "http-request",
+          "targetType": "code"
+        },
+        "id": "pc_list-source-panel-target",
+        "source": "pc_list",
+        "sourceHandle": "source",
+        "target": "panel",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "code",
+          "targetType": "llm"
+        },
+        "id": "panel-source-narrate-target",
+        "source": "panel",
+        "sourceHandle": "source",
+        "target": "narrate",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "llm",
+          "targetType": "llm"
+        },
+        "id": "narrate-source-judge-target",
+        "source": "narrate",
+        "sourceHandle": "source",
+        "target": "judge",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "llm",
+          "targetType": "code"
+        },
+        "id": "judge-source-parse-target",
+        "source": "judge",
+        "sourceHandle": "source",
+        "target": "parse",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "code",
+          "targetType": "http-request"
+        },
+        "id": "parse-source-pc_remember-target",
+        "source": "parse",
+        "sourceHandle": "source",
+        "target": "pc_remember",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "http-request",
+          "targetType": "answer"
+        },
+        "id": "pc_remember-source-answer-target",
+        "source": "pc_remember",
+        "sourceHandle": "source",
+        "target": "answer",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      }
+    ],
+    "nodes": [
+      {
+        "data": {
+          "desc": "玩家名号是跨会话翻旧账的唯一标识；留空则自动用 Dify 会话用户 ID 兜底。",
+          "selected": false,
+          "title": "报上名号",
+          "type": "start",
+          "variables": [
+            {
+              "label": "玩家ID（跨会话翻旧账靠它识别你，留空则用 guest）",
+              "max_length": 64,
+              "options": [],
+              "required": false,
+              "type": "text-input",
+              "variable": "player_id"
+            }
+          ]
+        },
+        "height": 110,
+        "id": "start",
+        "position": {
+          "x": 80,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 80,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "code": "import json\nimport re\n\n\ndef main(player_id: str, user_id: str, utterance: str) -> dict:\n    raw = (player_id or \"\").strip()\n    if not raw:\n        user = (user_id or \"\").strip()\n        raw = \"dx-\" + user[:8] if user else \"guest\"\n    key = re.sub(r\"[^0-9A-Za-z_\\u4e00-\\u9fff-]\", \"-\", raw)[:48] or \"guest\"\n    said = (utterance or \"\").strip() or \"（冒险者沉默不语）\"\n    return {\n        \"player_key\": key,\n        \"query_json\": json.dumps(said, ensure_ascii=False),\n        \"reason_json\": json.dumps(\"玩家原话：\" + said, ensure_ascii=False),\n    }\n",
+          "code_language": "python3",
+          "desc": "规范化玩家ID（留空则用 Dify 会话用户兜底），并把本回合原话转成可直接拼进 JSON 的安全字面量",
+          "outputs": {
+            "player_key": {
+              "children": null,
+              "type": "string"
+            },
+            "query_json": {
+              "children": null,
+              "type": "string"
+            },
+            "reason_json": {
+              "children": null,
+              "type": "string"
+            }
+          },
+          "selected": false,
+          "title": "身份与话术整理",
+          "type": "code",
+          "variables": [
+            {
+              "value_selector": [
+                "start",
+                "player_id"
+              ],
+              "value_type": "string",
+              "variable": "player_id"
+            },
+            {
+              "value_selector": [
+                "sys",
+                "user_id"
+              ],
+              "value_type": "string",
+              "variable": "user_id"
+            },
+            {
+              "value_selector": [
+                "sys",
+                "query"
+              ],
+              "value_type": "string",
+              "variable": "utterance"
+            }
+          ]
+        },
+        "height": 116,
+        "id": "prep",
+        "position": {
+          "x": 340,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 340,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "authorization": {
+            "config": null,
+            "type": "no-auth"
+          },
+          "body": {
+            "data": [
+              {
+                "id": "key-value-100",
+                "key": "",
+                "type": "text",
+                "value": "{\"title\": \"碎锚酒馆 · {{#prep.player_key#}}\", \"summary\": \"碎锚酒馆老板老巴恩的恩怨账本，记录玩家 {{#prep.player_key#}} 在此留下的每一笔恶作剧、欠账与人情。\", \"idempotency_key\": \"grudge-inn-{{#prep.player_key#}}\"}"
+              }
+            ],
+            "type": "json"
+          },
+          "default_value": [
+            {
+              "key": "body",
+              "type": "string",
+              "value": "{}"
+            },
+            {
+              "key": "status_code",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "key": "headers",
+              "type": "object",
+              "value": "{}"
+            }
+          ],
+          "desc": "幂等创建或获取玩家专属 PowerContext Scope；同名玩家在不同会话中固定命中同一个 Scope",
+          "error_strategy": "default-value",
+          "headers": "",
+          "method": "post",
+          "params": "",
+          "retry_config": {
+            "max_retries": 2,
+            "retry_enabled": true,
+            "retry_interval": 1000
+          },
+          "selected": false,
+          "ssl_verify": true,
+          "timeout": {
+            "connect": 10,
+            "max_connect_timeout": 10,
+            "max_read_timeout": 30,
+            "max_write_timeout": 10,
+            "read": 30,
+            "write": 10
+          },
+          "title": "开一本账",
+          "type": "http-request",
+          "url": "{{#env.pc_base_url#}}/v1/scopes",
+          "variables": []
+        },
+        "height": 104,
+        "id": "pc_scope",
+        "position": {
+          "x": 600,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 600,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "code": "import json\n\n\ndef main(scope_body: str) -> dict:\n    scope_id = \"\"\n    try:\n        data = json.loads(scope_body)\n        if isinstance(data, dict):\n            scope_id = str(data.get(\"scope_id\") or \"\")\n    except Exception:\n        scope_id = \"\"\n    return {\"scope_id\": scope_id}\n",
+          "code_language": "python3",
+          "desc": "从开账响应里取出服务端签发的 scope_id，供后续记忆检索与写入节点复用",
+          "outputs": {
+            "scope_id": {
+              "children": null,
+              "type": "string"
+            }
+          },
+          "selected": false,
+          "title": "记下账本号",
+          "type": "code",
+          "variables": [
+            {
+              "value_selector": [
+                "pc_scope",
+                "body"
+              ],
+              "value_type": "string",
+              "variable": "scope_body"
+            }
+          ]
+        },
+        "height": 116,
+        "id": "pick",
+        "position": {
+          "x": 860,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 860,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "authorization": {
+            "config": null,
+            "type": "no-auth"
+          },
+          "body": {
+            "data": [
+              {
+                "id": "key-value-101",
+                "key": "",
+                "type": "text",
+                "value": "{\"scope_id\": \"{{#pick.scope_id#}}\", \"query\": {{#prep.query_json#}}, \"max_bytes\": 3000}"
+              }
+            ],
+            "type": "json"
+          },
+          "default_value": [
+            {
+              "key": "body",
+              "type": "string",
+              "value": "{\"status\":\"empty\",\"content\":null,\"content_bytes\":0}"
+            },
+            {
+              "key": "status_code",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "key": "headers",
+              "type": "object",
+              "value": "{}"
+            }
+          ],
+          "desc": "调用 PowerContext /v1/context/prepare 检索并装配与本回合最相关的跨会话历史记忆",
+          "error_strategy": "default-value",
+          "headers": "",
+          "method": "post",
+          "params": "",
+          "retry_config": {
+            "max_retries": 2,
+            "retry_enabled": true,
+            "retry_interval": 1000
+          },
+          "selected": false,
+          "ssl_verify": true,
+          "timeout": {
+            "connect": 10,
+            "max_connect_timeout": 10,
+            "max_read_timeout": 30,
+            "max_write_timeout": 10,
+            "read": 30,
+            "write": 10
+          },
+          "title": "检索旧事",
+          "type": "http-request",
+          "url": "{{#env.pc_base_url#}}/v1/context/prepare",
+          "variables": []
+        },
+        "height": 104,
+        "id": "pc_prepare",
+        "position": {
+          "x": 1120,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 1120,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "authorization": {
+            "config": null,
+            "type": "no-auth"
+          },
+          "body": {
+            "data": [
+              {
+                "id": "key-value-102",
+                "key": "",
+                "type": "text",
+                "value": "{\"scope_id\": \"{{#pick.scope_id#}}\"}"
+              }
+            ],
+            "type": "json"
+          },
+          "default_value": [
+            {
+              "key": "body",
+              "type": "string",
+              "value": "{\"entries\":[]}"
+            },
+            {
+              "key": "status_code",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "key": "headers",
+              "type": "object",
+              "value": "{}"
+            }
+          ],
+          "desc": "拉取这位客人的全部活跃账目，用于计算怨气值、好感度与最近五笔旧账面板",
+          "error_strategy": "default-value",
+          "headers": "",
+          "method": "post",
+          "params": "",
+          "retry_config": {
+            "max_retries": 2,
+            "retry_enabled": true,
+            "retry_interval": 1000
+          },
+          "selected": false,
+          "ssl_verify": true,
+          "timeout": {
+            "connect": 10,
+            "max_connect_timeout": 10,
+            "max_read_timeout": 30,
+            "max_write_timeout": 10,
+            "read": 30,
+            "write": 10
+          },
+          "title": "取账本",
+          "type": "http-request",
+          "url": "{{#env.pc_base_url#}}/v1/memory/entries/list",
+          "variables": []
+        },
+        "height": 104,
+        "id": "pc_list",
+        "position": {
+          "x": 1380,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 1380,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "code": "import json\n\n\nWEIGHTS = {\"offense\": 25, \"favor\": -18, \"secret\": 12, \"neutral\": 0}\nLABELS = {\"offense\": \"冒犯\", \"favor\": \"人情\", \"secret\": \"秘密\", \"neutral\": \"闲话\"}\n\n\ndef main(prepare_body: str, list_body: str) -> dict:\n    ctx, grudge, entries = \"\", 0, []\n    try:\n        prepared = json.loads(prepare_body)\n        if isinstance(prepared, dict):\n            ctx = prepared.get(\"content\") or \"\"\n    except Exception:\n        ctx = \"\"\n    try:\n        listed = json.loads(list_body)\n        if isinstance(listed, dict):\n            entries = listed.get(\"entries\") or []\n    except Exception:\n        entries = []\n\n    counts = {k: 0 for k in WEIGHTS}\n    for item in entries:\n        if not isinstance(item, dict):\n            continue\n        kind = item.get(\"kind\") or \"neutral\"\n        if kind not in counts:\n            kind = \"neutral\"\n        counts[kind] += 1\n        grudge += WEIGHTS[kind]\n    grudge = max(0, min(100, grudge))\n\n    stat = \"／\".join(f\"{LABELS[k]}{counts[k]}\" for k in LABELS)\n    lines = [f\"共 {len(entries)} 条：{stat}\"]\n    for item in entries[-5:]:\n        if not isinstance(item, dict):\n            continue\n        kind = item.get(\"kind\") or \"neutral\"\n        if kind not in LABELS:\n            kind = \"neutral\"\n        text = str(item.get(\"text\") or \"\").strip().replace(\"\\n\", \" \")\n        lines.append(f\"- [{LABELS[kind]}] {text[:88]}\")\n    if not entries:\n        lines.append(\"-（账本还是空的，这位客人第一次来）\")\n\n    return {\n        \"context\": ctx if ctx.strip() else \"（没有检索到旧事）\",\n        \"grudge\": str(grudge),\n        \"ledger_text\": \"\\n\".join(lines),\n        \"visit_count\": str(len(entries) + 1),\n    }\n",
+          "code_language": "python3",
+          "desc": "把 prepare 召回的上下文与账本条目合成为「怨气值 + 恩怨账本摘要」",
+          "outputs": {
+            "context": {
+              "children": null,
+              "type": "string"
+            },
+            "grudge": {
+              "children": null,
+              "type": "string"
+            },
+            "ledger_text": {
+              "children": null,
+              "type": "string"
+            },
+            "visit_count": {
+              "children": null,
+              "type": "string"
+            }
+          },
+          "selected": false,
+          "title": "算账",
+          "type": "code",
+          "variables": [
+            {
+              "value_selector": [
+                "pc_prepare",
+                "body"
+              ],
+              "value_type": "string",
+              "variable": "prepare_body"
+            },
+            {
+              "value_selector": [
+                "pc_list",
+                "body"
+              ],
+              "value_type": "string",
+              "variable": "list_body"
+            }
+          ]
+        },
+        "height": 116,
+        "id": "panel",
+        "position": {
+          "x": 1640,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 1640,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "desc": "碎锚酒馆独眼老板老巴恩，依据旧事与怨气值决定这一回合的语气与动作",
+          "model": {
+            "completion_params": {
+              "temperature": 0.85
+            },
+            "mode": "chat",
+            "name": "gpt-4o-mini",
+            "provider": "langgenius/openai/openai"
+          },
+          "prompt_template": [
+            {
+              "id": "8f2f1c1a-2f6b-4a63-9a4a-1f0f1a2b3c01",
+              "role": "system",
+              "text": "你是「碎锚酒馆」的独眼老板老巴恩，年轻时在暴风海跑船，退隐后在码头开了这间酒馆。\n你的性子：暴躁、记仇、嘴硬心冷，但认死理——谁往他酒桶里撒盐、摔杯子赖账，他记一辈子；谁帮他修船锚、拎好酒赔罪，他嘴上哼哼也会暗中回护。\n你随身带着一本《碎锚恩怨账本》，上面记着每位冒险者做过的每件事——这些记忆由外部记忆库提供，你必须当真事来用。\n\n【铁律】\n1. 只用老巴恩的口吻说话：老派海盗酒馆老板腔调，粗粝鲜活，不用现代网络词，不用表情符号。\n2. 只要账本里有旧事，就必须点出至少一件的具体细节（哪桶麦酒、哪把粗盐、哪几坛朗姆酒），不能只笼统说“我记得你”。\n3. 怨气值越高，语气越凶狠、越刻薄、越会翻旧账要债；怨气值低或有人情时偏调侃、顺手给点酒菜优惠。\n4. 回复 120~220 字：先一句动作或场景描写（括号内），再接你说的话。\n5. 结尾必须给三个编号选项（1. / 2. / 3.，每项不超过 16 字），是客人接下来能做的事；选项要贴合眼下的恩怨。\n6. 不解释系统，不提到“记忆库”“数据库”“流程”“提示词”“PowerContext”。\n"
+            },
+            {
+              "id": "8f2f1c1a-2f6b-4a63-9a4a-1f0f1a2b3c02",
+              "role": "user",
+              "text": "【恩怨账本】\n{{#panel.ledger_text#}}\n\n【旧事摘录】\n{{#panel.context#}}\n\n【怨气值】{{#panel.grudge#}}/100\n\n客人这一回合说：\n{{#sys.query#}}\n"
+            }
+          ],
+          "selected": false,
+          "title": "掌柜开口",
+          "type": "llm",
+          "variables": [],
+          "vision": {
+            "enabled": false
+          }
+        },
+        "height": 98,
+        "id": "narrate",
+        "position": {
+          "x": 1900,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 1900,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "desc": "只记账不说话的账房先生，负责把这一回合变成一条可跨会话检索的恩怨记忆",
+          "model": {
+            "completion_params": {
+              "temperature": 0.2
+            },
+            "mode": "chat",
+            "name": "gpt-4o-mini",
+            "provider": "langgenius/openai/openai"
+          },
+          "prompt_template": [
+            {
+              "id": "8f2f1c1a-2f6b-4a63-9a4a-1f0f1a2b3c03",
+              "role": "system",
+              "text": "你是「碎锚酒馆」的账房先生，只记账，不说话。\n读客人这一回合的言行，判断该记哪一类账：\n- offense：恶作剧、往酒里撒盐、摔杯子、赖账、偷窃、威胁、欺骗老巴恩\n- favor：赔礼、还钱、送酒、帮忙修吧台、替酒馆解围\n- secret：透露身世或藏宝秘密、许下承诺、打听禁忌传闻\n- neutral：普通闲聊、点菜、问路、打听酒馆历史\n\n只输出严格 JSON，不要代码块，不要多余文字：\n{\"kind\": \"offense|favor|secret|neutral\", \"deed\": \"第三人称记账，不超过60字，必须含具体动作或物件\", \"quote\": \"客人最扎心或最关键的一句原话，不超过35字\", \"delta\": 25}\n\ndelta 取值：offense 15~35，favor -25~-10，secret 5~15，neutral 0。\n"
+            },
+            {
+              "id": "8f2f1c1a-2f6b-4a63-9a4a-1f0f1a2b3c04",
+              "role": "user",
+              "text": "【现有账本摘要】\n{{#panel.ledger_text#}}\n\n【客人的这一回合】\n{{#sys.query#}}\n"
+            }
+          ],
+          "selected": false,
+          "title": "判这一笔",
+          "type": "llm",
+          "variables": [],
+          "vision": {
+            "enabled": false
+          }
+        },
+        "height": 98,
+        "id": "judge",
+        "position": {
+          "x": 2160,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 2160,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "code": "import json\nimport re\n\n\nKINDS = {\"offense\", \"favor\", \"secret\", \"neutral\"}\n\n\ndef main(judge_text: str, user_said: str) -> dict:\n    raw = judge_text or \"\"\n    match = re.search(r\"\\{.*\\}\", raw, re.DOTALL)\n    kind, deed = \"neutral\", \"\"\n    if match:\n        try:\n            data = json.loads(match.group(0))\n            if isinstance(data, dict):\n                kind = str(data.get(\"kind\") or \"\").strip()\n                deed = str(data.get(\"deed\") or \"\").strip()\n        except Exception:\n            pass\n    if kind not in KINDS:\n        kind = \"neutral\"\n    if not deed:\n        deed = \"冒险者在吧台前丢下一句话，账房先生记下了原委。\"\n    said = \" \".join(str(user_said or \"\").split())[:180]\n    ledger = f\"{deed[:200]}（原话：{said}）\" if said else deed[:200]\n    return {\n        \"kind\": kind,\n        \"ledger_json\": json.dumps(ledger, ensure_ascii=False),\n    }\n",
+          "code_language": "python3",
+          "desc": "从 LLM 的 JSON 里取字段，坏格式时兜底，并把玩家原话拼入账目以确保跨会话检索高命中",
+          "outputs": {
+            "kind": {
+              "children": null,
+              "type": "string"
+            },
+            "ledger_json": {
+              "children": null,
+              "type": "string"
+            }
+          },
+          "selected": false,
+          "title": "誊账",
+          "type": "code",
+          "variables": [
+            {
+              "value_selector": [
+                "judge",
+                "text"
+              ],
+              "value_type": "string",
+              "variable": "judge_text"
+            },
+            {
+              "value_selector": [
+                "sys",
+                "query"
+              ],
+              "value_type": "string",
+              "variable": "user_said"
+            }
+          ]
+        },
+        "height": 116,
+        "id": "parse",
+        "position": {
+          "x": 2420,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 2420,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "authorization": {
+            "config": null,
+            "type": "no-auth"
+          },
+          "body": {
+            "data": [
+              {
+                "id": "key-value-103",
+                "key": "",
+                "type": "text",
+                "value": "{\"scope_id\": \"{{#pick.scope_id#}}\", \"kind\": \"{{#parse.kind#}}\", \"text\": {{#parse.ledger_json#}}, \"reason\": {{#prep.reason_json#}}}"
+              }
+            ],
+            "type": "json"
+          },
+          "default_value": [
+            {
+              "key": "body",
+              "type": "string",
+              "value": "{\"changed\":false,\"records\":[]}"
+            },
+            {
+              "key": "status_code",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "key": "headers",
+              "type": "object",
+              "value": "{}"
+            }
+          ],
+          "desc": "调用 PowerContext /v1/memory/remember 将本回合事件写入玩家的持久账本",
+          "error_strategy": "default-value",
+          "headers": "",
+          "method": "post",
+          "params": "",
+          "retry_config": {
+            "max_retries": 2,
+            "retry_enabled": true,
+            "retry_interval": 1000
+          },
+          "selected": false,
+          "ssl_verify": true,
+          "timeout": {
+            "connect": 10,
+            "max_connect_timeout": 10,
+            "max_read_timeout": 30,
+            "max_write_timeout": 10,
+            "read": 30,
+            "write": 10
+          },
+          "title": "落账",
+          "type": "http-request",
+          "url": "{{#env.pc_base_url#}}/v1/memory/remember",
+          "variables": []
+        },
+        "height": 104,
+        "id": "pc_remember",
+        "position": {
+          "x": 2680,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 2680,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      },
+      {
+        "data": {
+          "answer": "{{#narrate.text#}}\n\n【恩怨账本 · {{#prep.player_key#}}】第 {{#panel.visit_count#}} 次照面 · 怨气 {{#panel.grudge#}}/100\n{{#panel.ledger_text#}}\n",
+          "desc": "",
+          "selected": false,
+          "title": "直接回复",
+          "type": "answer",
+          "variables": []
+        },
+        "height": 103,
+        "id": "answer",
+        "position": {
+          "x": 2940,
+          "y": 300
+        },
+        "positionAbsolute": {
+          "x": 2940,
+          "y": 300
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 243
+      }
+    ]
+  },
+  "features": {
+    "file_upload": {
+      "allowed_file_extensions": [
+        ".JPG",
+        ".JPEG",
+        ".PNG",
+        ".GIF",
+        ".WEBP",
+        ".SVG"
+      ],
+      "allowed_file_types": [
+        "image"
+      ],
+      "allowed_file_upload_methods": [
+        "local_file",
+        "remote_url"
+      ],
+      "enabled": false,
+      "fileUploadConfig": {
+        "audio_file_size_limit": 50,
+        "batch_count_limit": 5,
+        "file_size_limit": 15,
+        "image_file_size_limit": 10,
+        "video_file_size_limit": 50,
+        "workflow_file_upload_limit": 10
+      },
+      "image": {
+        "enabled": false,
+        "number_limits": 3,
+        "transfer_methods": [
+          "local_file",
+          "remote_url"
+        ]
+      },
+      "number_limits": 3
+    },
+    "opening_statement": "⚓ 海雾裹着咸腥味灌进碎锚酒馆，吧台上的鲸油灯晃了三晃。\n\n独眼老板老巴恩用缺了口的铁钩敲了敲橡木酒桶，翻开手边那本浸透朗姆酒渍的《碎锚恩怨账本》：\n“生面孔？还是改头换面来赖账的？先报个名号——在这间酒馆里，你倒进酒桶的每一撮粗盐、欠下的每一枚铜板、帮过的每一次忙，老子都记在账上。”\n\n🍺 玩法：在「玩家ID」里填一个名字（例如 `cui` 或 `shen`，留空则自动用会话身份兜底），然后在对话里自由恶作剧、赖账、赔礼道歉或打听传闻。你做的每件事都会写进 PowerContext 账本；哪怕关闭页面、开启全新会话，只要报同一个名号，老巴恩第一句话就会翻你的旧账！\n",
+    "retriever_resource": {
+      "enabled": false
+    },
+    "sensitive_word_avoidance": {
+      "enabled": false
+    },
+    "speech_to_text": {
+      "enabled": false
+    },
+    "suggested_questions": [
+      "我往你的橡木麦酒桶里倒了一把粗盐，一文钱也不赔，你能拿我怎样？",
+      "上次往麦酒桶倒粗盐是我混账，今天拎来三坛陈年朗姆酒赔罪，酒钱双倍奉上。",
+      "老巴恩，你这碎锚酒馆开了多少年了？今晚码头有什么传闻？"
+    ],
+    "suggested_questions_after_answer": {
+      "enabled": true
+    },
+    "text_to_speech": {
+      "enabled": false,
+      "language": "",
+      "voice": ""
+    }
+  },
+  "environment_variables": [
+    {
+      "description": "PowerContext HTTP 服务地址。Dify 跑在 Docker 容器里时改成 http://host.docker.internal:8000",
+      "id": "2c7c9f0e-3a51-4f0e-9d3a-6f1a1f3f7a10",
+      "name": "pc_base_url",
+      "selector": [
+        "env",
+        "pc_base_url"
+      ],
+      "value": "http://127.0.0.1:8000",
+      "value_type": "string"
+    }
+  ],
+  "conversation_variables": [],
+  "version": "draft",
+  "created_by": {
+    "id": "afc01d0a-bcbb-4702-b8ad-314f59588eed",
+    "name": "obdev",
+    "email": "obdev@local.dev"
+  },
+  "created_at": 1761724800,
+  "updated_by": {
+    "id": "afc01d0a-bcbb-4702-b8ad-314f59588eed",
+    "name": "obdev",
+    "email": "obdev@local.dev"
+  },
+  "updated_at": 1761724805,
+  "tool_published": false
+}
